@@ -36,6 +36,13 @@ interface SidebarContentProps {
 }
 
 function SidebarContent({ pathname, onNavigate }: SidebarContentProps) {
+  const handleAdminLogout = () => {
+    void fetch('/api/admin-auth/logout', {
+      method: 'POST',
+      keepalive: true,
+    });
+  };
+
   return (
     <div className="h-full p-5 sm:p-6 flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -85,7 +92,10 @@ function SidebarContent({ pathname, onNavigate }: SidebarContentProps) {
         </div>
         <Link
           href="/login"
-          onClick={onNavigate}
+          onClick={() => {
+            handleAdminLogout();
+            onNavigate?.();
+          }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
         >
           <LogOut size={20} />

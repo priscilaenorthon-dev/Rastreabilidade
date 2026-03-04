@@ -1,9 +1,10 @@
 import { cookies } from 'next/headers';
 import { hashPassword } from '@/lib/password-utils';
 import { isSupabaseConfigured, selectRows } from '@/lib/supabase-rest';
+import { CLIENT_PORTAL_COOKIE } from '@/lib/auth-cookies';
 import type { ClientAccount, Company } from '@/lib/types';
 
-export const CLIENT_PORTAL_COOKIE = 'hosetrack_client_portal';
+export { CLIENT_PORTAL_COOKIE };
 
 const CLIENT_PORTAL_USERNAME = (process.env.CLIENT_PORTAL_USERNAME ?? 'jomaga').trim();
 const CLIENT_PORTAL_PASSWORD = (process.env.CLIENT_PORTAL_PASSWORD ?? 'jomaga1234').trim();

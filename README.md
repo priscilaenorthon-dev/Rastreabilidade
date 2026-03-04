@@ -60,6 +60,8 @@ Opcionais:
 - `CLIENT_PORTAL_USERNAME` (fallback demo)
 - `CLIENT_PORTAL_PASSWORD` (fallback demo)
 - `CLIENT_PORTAL_CNPJ` (fallback demo)
+- `ADMIN_PORTAL_USERNAME` (default: `admin`)
+- `ADMIN_PORTAL_PASSWORD` (default: `admin1234`)
 
 ## 🗄️ Banco de dados (Supabase)
 

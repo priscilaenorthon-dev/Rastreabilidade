@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { authenticateClient, CLIENT_PORTAL_COOKIE, encodeClientSession } from '@/lib/client-portal-auth';
-import { ADMIN_PORTAL_COOKIE } from '@/lib/auth-cookies';
+import { authenticateAdmin, ADMIN_PORTAL_COOKIE } from '@/lib/admin-portal-auth';
+import { CLIENT_PORTAL_COOKIE } from '@/lib/auth-cookies';
 
 export async function POST(request: Request) {
   let payload: { username?: string; password?: string } = {};
@@ -14,13 +14,13 @@ export async function POST(request: Request) {
   const username = payload.username?.trim() ?? '';
   const password = payload.password?.trim() ?? '';
 
-  const session = await authenticateClient(username, password);
+  const session = authenticateAdmin(username, password);
   if (!session) {
-    return NextResponse.json({ ok: false, message: 'Usuario ou senha invalido.' }, { status: 401 });
+    return NextResponse.json({ ok: false, message: 'Usuario ou senha de administrador invalido.' }, { status: 401 });
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(CLIENT_PORTAL_COOKIE, encodeClientSession(session), {
+  response.cookies.set(ADMIN_PORTAL_COOKIE, session.username, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 8,
   });
 
-  response.cookies.set(ADMIN_PORTAL_COOKIE, '', {
+  response.cookies.set(CLIENT_PORTAL_COOKIE, '', {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

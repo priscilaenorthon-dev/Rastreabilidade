@@ -7,12 +7,13 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = React.useState('admin');
-  const [password, setPassword] = React.useState('admin1234');
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!username.trim() || !password.trim()) {
@@ -21,7 +22,31 @@ export default function LoginPage() {
     }
 
     setErrorMessage('');
-    router.push('/');
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/admin-auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({ message: '' }))) as { message?: string };
+        setErrorMessage(payload.message ?? 'Usuário ou senha inválido.');
+        return;
+      }
+
+      router.push('/');
+      router.refresh();
+    } catch {
+      setErrorMessage('Não foi possível validar o login agora. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,6 +91,7 @@ export default function LoginPage() {
                     type="text" 
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -86,6 +112,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="current-password"
                   />
                   <button
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
@@ -109,11 +136,19 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-blue-600/25 transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-blue-600/35 active:scale-[0.98]" type="submit">
-                <span>Entrar no Sistema</span>
+              <button
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-blue-600/25 transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-blue-600/35 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                type="submit"
+                disabled={loading}
+              >
+                <span>{loading ? 'Validando...' : 'Entrar no Sistema'}</span>
                 <LogIn size={18} />
               </button>
             </form>
+
+            <p className="mt-4 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Cliente? Acesse em <a href="/cliente/login" className="text-blue-600 hover:underline">/cliente/login</a>
+            </p>
 
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-4">
               <button className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 hover:text-blue-600 transition-colors">
