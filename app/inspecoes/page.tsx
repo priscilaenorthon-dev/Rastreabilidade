@@ -3,9 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { getInspectionViews } from '@/lib/data-service';
+import { createInspection, deleteInspection, getInspectionViews, updateInspectionStatus } from '@/lib/data-service';
 import type { InspectionView } from '@/lib/types';
-import { CheckCircle2, CircleAlert, ClipboardCheck, Search } from 'lucide-react';
+import { CheckCircle2, CircleAlert, ClipboardCheck, Search, Trash2 } from 'lucide-react';
 
 function formatDate(value: string): string {
   const parsed = new Date(value);
@@ -15,39 +15,56 @@ function formatDate(value: string): string {
   return parsed.toLocaleDateString('pt-BR');
 }
 
+const EMPTY_FORM = {
+  equipment_id: '',
+  inspector: '',
+  result: 'Aprovado',
+  status: 'Pendente de acao',
+  inspected_at: new Date().toISOString().slice(0, 10),
+  notes: '',
+};
+
 export default function InspecoesPage() {
   const [rows, setRows] = React.useState<InspectionView[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
   const [onlyPending, setOnlyPending] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [form, setForm] = React.useState(EMPTY_FORM);
+
+  const loadRows = React.useCallback(async () => {
+    try {
+      const data = await getInspectionViews();
+      setRows(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao carregar inspecoes.');
+    }
+  }, []);
 
   React.useEffect(() => {
     let active = true;
 
-    async function load() {
-      try {
-        const data = await getInspectionViews();
-        if (active) {
-          setRows(data);
-        }
-      } catch (err) {
-        if (active) {
-          setError(err instanceof Error ? err.message : 'Falha ao carregar inspecoes.');
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
+    async function run() {
+      if (!active) {
+        return;
+      }
+      setLoading(true);
+      await loadRows();
+      if (active) {
+        setLoading(false);
       }
     }
 
-    void load();
+    void run();
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadRows]);
 
   const filtered = React.useMemo(() => {
     return rows.filter((item) => {
@@ -64,18 +81,85 @@ export default function InspecoesPage() {
     });
   }, [rows, onlyPending, query]);
 
+  const handleFormChange = (field: keyof typeof EMPTY_FORM, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!form.equipment_id.trim() || !form.inspector.trim()) {
+      setError('Informe equipamento e inspetor para salvar a inspeção.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await createInspection({
+        equipment_id: form.equipment_id,
+        inspector: form.inspector,
+        result: form.result,
+        status: form.status,
+        inspected_at: form.inspected_at,
+        notes: form.notes,
+      });
+      await loadRows();
+      setForm(EMPTY_FORM);
+      setSuccessMessage('Inspeção salva no Supabase com sucesso.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao salvar inspeção.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleMarkDone = async (id: string) => {
+    setBusyId(id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await updateInspectionStatus(id, { status: 'Concluida', result: 'Aprovado' });
+      await loadRows();
+      setSuccessMessage(`Inspeção ${id} atualizada.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao atualizar inspeção.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setBusyId(id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteInspection(id);
+      setRows((current) => current.filter((item) => item.id !== id));
+      setSuccessMessage(`Inspeção ${id} excluida.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao excluir inspeção.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <DashboardLayout title="Inspecoes">
       <div className="space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-500">Controle de inspeções periodicas com historico por equipamento.</p>
+          <p className="text-sm text-slate-500">Controle de inspeções com CRUD conectado ao Supabase.</p>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar inspecao"
+                placeholder="Buscar inspeção"
                 className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
               />
             </div>
@@ -90,6 +174,62 @@ export default function InspecoesPage() {
         </section>
 
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {successMessage && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</div>
+        )}
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-700">Nova inspeção</h3>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+            <input
+              value={form.equipment_id}
+              onChange={(event) => handleFormChange('equipment_id', event.target.value)}
+              placeholder="Equipamento ID"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <input
+              value={form.inspector}
+              onChange={(event) => handleFormChange('inspector', event.target.value)}
+              placeholder="Inspetor"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <select
+              value={form.result}
+              onChange={(event) => handleFormChange('result', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              <option>Aprovado</option>
+              <option>Reprovado</option>
+            </select>
+            <select
+              value={form.status}
+              onChange={(event) => handleFormChange('status', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              <option>Pendente de acao</option>
+              <option>Concluida</option>
+            </select>
+            <input
+              type="date"
+              value={form.inspected_at}
+              onChange={(event) => handleFormChange('inspected_at', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {saving ? 'Salvando...' : 'Salvar inspeção'}
+            </button>
+            <input
+              value={form.notes}
+              onChange={(event) => handleFormChange('notes', event.target.value)}
+              placeholder="Observações"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 md:col-span-2 xl:col-span-6"
+            />
+          </form>
+        </section>
 
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full text-left">
@@ -101,21 +241,21 @@ export default function InspecoesPage() {
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3">Resultado</th>
                 <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Acao</th>
+                <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {loading && (
                 <tr>
                   <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
-                    Carregando inspecoes...
+                    Carregando inspeções...
                   </td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
-                    Nenhuma inspecao encontrada.
+                    Nenhuma inspeção encontrada.
                   </td>
                 </tr>
               )}
@@ -136,13 +276,34 @@ export default function InspecoesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/equipamentos/${item.equipment_id}`}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                    >
-                      <ClipboardCheck size={14} />
-                      Abrir
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {!item.status.toLowerCase().includes('concluida') && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkDone(item.id)}
+                          disabled={busyId === item.id}
+                          className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                        >
+                          Concluir
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item.id)}
+                        disabled={busyId === item.id}
+                        className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                      >
+                        <Trash2 size={13} />
+                        Excluir
+                      </button>
+                      <Link
+                        href={`/equipamentos/${item.equipment_id}`}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                      >
+                        <ClipboardCheck size={14} />
+                        Abrir
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

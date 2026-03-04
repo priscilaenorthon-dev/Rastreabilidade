@@ -129,3 +129,38 @@ export async function insertRow<T>(table: string, payload: object): Promise<T | 
 
   return data[0] ?? null;
 }
+
+export async function updateRow<T>(
+  table: string,
+  filters: Record<string, Primitive>,
+  payload: object
+): Promise<T | null> {
+  const params = new URLSearchParams();
+  applyFilters(params, filters);
+  params.set('select', '*');
+
+  const data = await requestJson<T[]>(`${table}?${params.toString()}`, {
+    method: 'PATCH',
+    headers: {
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return data[0] ?? null;
+}
+
+export async function deleteRow(table: string, filters: Record<string, Primitive>): Promise<boolean> {
+  const params = new URLSearchParams();
+  applyFilters(params, filters);
+  params.set('select', 'id');
+
+  const data = await requestJson<Array<{ id: string }>>(`${table}?${params.toString()}`, {
+    method: 'DELETE',
+    headers: {
+      Prefer: 'return=representation',
+    },
+  });
+
+  return data.length > 0;
+}

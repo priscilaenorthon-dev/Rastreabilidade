@@ -5,7 +5,7 @@ import {
   DEMO_INSPECTIONS,
   DEMO_MAINTENANCES,
 } from '@/lib/demo-data';
-import { insertRow, isSupabaseConfigured, selectRows } from '@/lib/supabase-rest';
+import { deleteRow, insertRow, isSupabaseConfigured, selectRows, updateRow } from '@/lib/supabase-rest';
 import type {
   Company,
   CompanyStatus,
@@ -72,6 +72,19 @@ async function loadWithFallback<T>(loader: () => Promise<T[]>, fallback: T[]): P
   }
 }
 
+function assertWriteReady(): void {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase nao configurado. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente.');
+  }
+}
+
+function toReadableError(error: unknown, defaultMessage: string): Error {
+  if (error instanceof Error) {
+    return new Error(error.message || defaultMessage);
+  }
+  return new Error(defaultMessage);
+}
+
 export async function getCompanies(): Promise<Company[]> {
   return loadWithFallback(
     () => selectRows<Company>('companies', { orderBy: { column: 'name' } }),
@@ -101,16 +114,16 @@ export async function createCompany(input: {
     status: input.status ?? 'Ativo',
   };
 
-  if (!isSupabaseConfigured()) {
-    return payload;
-  }
+  assertWriteReady();
 
   try {
     const inserted = await insertRow<Company>('companies', payload);
-    return inserted ?? payload;
+    if (!inserted) {
+      throw new Error('Supabase retornou resposta vazia ao criar empresa.');
+    }
+    return inserted;
   } catch (error) {
-    logSupabaseError(error);
-    return payload;
+    throw toReadableError(error, 'Falha ao salvar empresa no Supabase.');
   }
 }
 
@@ -142,16 +155,16 @@ export async function createEquipment(input: Partial<Equipment> & { id: string; 
     qr_code: input.qr_code ?? `QR-${input.id.trim()}`,
   };
 
-  if (!isSupabaseConfigured()) {
-    return payload;
-  }
+  assertWriteReady();
 
   try {
     const inserted = await insertRow<Equipment>('equipments', payload);
-    return inserted ?? payload;
+    if (!inserted) {
+      throw new Error('Supabase retornou resposta vazia ao criar equipamento.');
+    }
+    return inserted;
   } catch (error) {
-    logSupabaseError(error);
-    return payload;
+    throw toReadableError(error, 'Falha ao salvar equipamento no Supabase.');
   }
 }
 
@@ -195,6 +208,73 @@ export async function getInspections(): Promise<Inspection[]> {
   );
 }
 
+export async function createInspection(input: {
+  equipment_id: string;
+  inspector: string;
+  result: string;
+  status: string;
+  inspected_at?: string;
+  notes?: string | null;
+}): Promise<Inspection> {
+  assertWriteReady();
+
+  const payload: Inspection = {
+    id: `INSP-${Math.floor(Math.random() * 90000 + 10000)}`,
+    equipment_id: input.equipment_id.trim(),
+    inspector: input.inspector.trim(),
+    result: input.result.trim(),
+    status: input.status.trim(),
+    inspected_at: input.inspected_at || new Date().toISOString().slice(0, 10),
+    notes: input.notes?.trim() || null,
+  };
+
+  try {
+    const inserted = await insertRow<Inspection>('inspections', payload);
+    if (!inserted) {
+      throw new Error('Supabase retornou resposta vazia ao criar inspecao.');
+    }
+    return inserted;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao salvar inspecao no Supabase.');
+  }
+}
+
+export async function updateInspectionStatus(
+  id: string,
+  patch: { status?: string; result?: string; notes?: string | null }
+): Promise<Inspection> {
+  assertWriteReady();
+
+  const payload = {
+    ...(patch.status ? { status: patch.status.trim() } : {}),
+    ...(patch.result ? { result: patch.result.trim() } : {}),
+    ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+  };
+
+  try {
+    const updated = await updateRow<Inspection>('inspections', { id }, payload);
+    if (!updated) {
+      throw new Error('Inspecao nao encontrada para atualizacao.');
+    }
+    return updated;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao atualizar inspecao no Supabase.');
+  }
+}
+
+export async function deleteInspection(id: string): Promise<void> {
+  assertWriteReady();
+
+  try {
+    const deleted = await deleteRow('inspections', { id });
+    if (!deleted) {
+      throw new Error('Inspecao nao encontrada para exclusao.');
+    }
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao excluir inspecao no Supabase.');
+  }
+}
+
 export async function getInspectionViews(): Promise<InspectionView[]> {
   const [inspections, equipments] = await Promise.all([getInspections(), getEquipments()]);
   const equipmentMap = new Map(equipments.map((item) => [item.id, item]));
@@ -210,6 +290,77 @@ export async function getMaintenances(): Promise<Maintenance[]> {
     () => selectRows<Maintenance>('maintenances', { orderBy: { column: 'scheduled_for', ascending: false } }),
     DEMO_MAINTENANCES
   );
+}
+
+export async function createMaintenance(input: {
+  equipment_id: string;
+  maintenance_type: string;
+  scheduled_for: string;
+  status: string;
+  technician?: string;
+  cost?: number | null;
+  notes?: string | null;
+}): Promise<Maintenance> {
+  assertWriteReady();
+
+  const payload: Maintenance = {
+    id: `MAN-${Math.floor(Math.random() * 90000 + 10000)}`,
+    equipment_id: input.equipment_id.trim(),
+    maintenance_type: input.maintenance_type.trim(),
+    scheduled_for: input.scheduled_for,
+    status: input.status.trim(),
+    technician: input.technician?.trim() || null,
+    cost: input.cost ?? null,
+    notes: input.notes?.trim() || null,
+  };
+
+  try {
+    const inserted = await insertRow<Maintenance>('maintenances', payload);
+    if (!inserted) {
+      throw new Error('Supabase retornou resposta vazia ao criar manutencao.');
+    }
+    return inserted;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao salvar manutencao no Supabase.');
+  }
+}
+
+export async function updateMaintenanceStatus(
+  id: string,
+  patch: { status?: string; scheduled_for?: string; technician?: string; notes?: string | null; cost?: number | null }
+): Promise<Maintenance> {
+  assertWriteReady();
+
+  const payload = {
+    ...(patch.status ? { status: patch.status.trim() } : {}),
+    ...(patch.scheduled_for ? { scheduled_for: patch.scheduled_for } : {}),
+    ...(patch.technician !== undefined ? { technician: patch.technician ? patch.technician.trim() : null } : {}),
+    ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+    ...(patch.cost !== undefined ? { cost: patch.cost } : {}),
+  };
+
+  try {
+    const updated = await updateRow<Maintenance>('maintenances', { id }, payload);
+    if (!updated) {
+      throw new Error('Manutencao nao encontrada para atualizacao.');
+    }
+    return updated;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao atualizar manutencao no Supabase.');
+  }
+}
+
+export async function deleteMaintenance(id: string): Promise<void> {
+  assertWriteReady();
+
+  try {
+    const deleted = await deleteRow('maintenances', { id });
+    if (!deleted) {
+      throw new Error('Manutencao nao encontrada para exclusao.');
+    }
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao excluir manutencao no Supabase.');
+  }
 }
 
 export async function getMaintenanceViews(): Promise<MaintenanceView[]> {

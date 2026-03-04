@@ -22,6 +22,7 @@ export default function EmpresasPage() {
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
   const [form, setForm] = React.useState(EMPTY_FORM);
 
@@ -89,6 +90,7 @@ export default function EmpresasPage() {
 
     setSaving(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       const created = await createCompany({
@@ -104,6 +106,7 @@ export default function EmpresasPage() {
 
       setCompanies((current) => [created, ...current]);
       setForm(EMPTY_FORM);
+      setSuccessMessage(`Empresa "${created.name}" salva no Supabase com sucesso.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar empresa.');
     } finally {
@@ -151,6 +154,11 @@ export default function EmpresasPage() {
 
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+        {successMessage && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
         )}
 
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
