@@ -68,7 +68,7 @@ export default function InspecoesPage() {
     <DashboardLayout title="Inspecoes">
       <div className="space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-500">Controle de inspeções periodicas com historico por equipamento.</p>
+          <p className="text-sm text-slate-500">Controle de inspeÃ§Ãµes periodicas com historico por equipamento.</p>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

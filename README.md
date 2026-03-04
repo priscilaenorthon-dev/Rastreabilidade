@@ -1,6 +1,6 @@
 # HoseTrack Pro - Demo com Supabase
 
-Aplicacao Next.js para rastreabilidade de mangueiras/conectores, inspeções, manutencoes e oportunidades comerciais.
+Aplicacao Next.js para rastreabilidade de mangueiras/conectores, inspeÃ§Ãµes, manutencoes e oportunidades comerciais.
 
 ## 1) Configuracao local
 
