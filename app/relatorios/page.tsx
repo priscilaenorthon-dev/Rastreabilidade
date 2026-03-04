@@ -71,7 +71,7 @@ export default function RelatoriosPage() {
             type="button"
             disabled={!snapshot}
             onClick={() => snapshot && downloadExecutiveSummary(snapshot)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:w-auto"
           >
             <Download size={14} />
             Exportar resumo executivo
@@ -84,30 +84,30 @@ export default function RelatoriosPage() {
         {snapshot && (
           <>
             <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Empresas</p>
-                <p className="mt-2 text-3xl font-black text-slate-900">{snapshot.totalCompanies}</p>
+                <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{snapshot.totalCompanies}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Equipamentos</p>
-                <p className="mt-2 text-3xl font-black text-slate-900">{snapshot.totalEquipments}</p>
+                <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{snapshot.totalEquipments}</p>
               </article>
-              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Oportunidades</p>
-                <p className="mt-2 text-3xl font-black text-slate-900">{snapshot.totalOpportunities}</p>
+                <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{snapshot.totalOpportunities}</p>
               </article>
-              <article className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+              <article className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm transition-shadow hover:shadow-md">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">Vencidos</p>
-                <p className="mt-2 text-3xl font-black text-red-700">{snapshot.overdueCount}</p>
+                <p className="mt-2 text-2xl font-black text-red-700 sm:text-3xl">{snapshot.overdueCount}</p>
               </article>
-              <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+              <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition-shadow hover:shadow-md">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Vencendo em 30 dias</p>
-                <p className="mt-2 text-3xl font-black text-amber-700">{snapshot.expiringIn30Days}</p>
+                <p className="mt-2 text-2xl font-black text-amber-700 sm:text-3xl">{snapshot.expiringIn30Days}</p>
               </article>
             </section>
 
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
                   <BarChart3 size={16} className="text-blue-600" />
                   Narrativa comercial
@@ -123,7 +123,7 @@ export default function RelatoriosPage() {
                 </ul>
               </article>
 
-              <article className="rounded-xl border border-blue-200 bg-blue-50 p-5">
+              <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-blue-700">
                   <ShieldCheck size={16} />
                   Confianca para auditoria

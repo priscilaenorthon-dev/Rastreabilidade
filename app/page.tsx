@@ -27,9 +27,9 @@ function StatCard({
   }[tone];
 
   return (
-    <article className={`rounded-xl border p-4 shadow-sm ${toneClass}`}>
+    <article className={`rounded-xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${toneClass}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wide">{title}</p>
-      <p className="mt-2 text-3xl font-black">{value}</p>
+      <p className="mt-2 text-2xl font-black sm:text-3xl">{value}</p>
       <p className="mt-1 text-xs opacity-80">{helper}</p>
     </article>
   );
@@ -85,7 +85,7 @@ export default function DashboardPage() {
     const maxCompanyTotal = Math.max(1, ...snapshot.companiesByEquipment.map((item) => item.total));
 
     return (
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Total de Equipamentos"
@@ -113,8 +113,8 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Carteira por empresa</h3>
               <Building2 size={18} className="text-blue-600" />
@@ -140,7 +140,7 @@ export default function DashboardPage() {
             </div>
           </article>
 
-          <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Status operacional</h3>
               <Factory size={18} className="text-blue-600" />
@@ -166,8 +166,8 @@ export default function DashboardPage() {
           </article>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 p-5">
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex flex-col items-start justify-between gap-2 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:p-5">
             <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
               <AlertTriangle size={18} className="text-red-600" />
               Alertas e oportunidades
@@ -226,21 +226,21 @@ export default function DashboardPage() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Link href="/inspecoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+          <Link href="/inspecoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md active:scale-[0.99]">
             <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
               <ClipboardCheck size={14} />
               Inspecoes
             </p>
             <p className="text-sm text-slate-700">Gerencie checklists, aprovacoes e pendencias tecnicas.</p>
           </Link>
-          <Link href="/manutencoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+          <Link href="/manutencoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md active:scale-[0.99]">
             <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
               <Wrench size={14} />
               Manutencoes
             </p>
             <p className="text-sm text-slate-700">Acompanhe ordens de servico e custos por equipamento.</p>
           </Link>
-          <Link href="/relatorios" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+          <Link href="/relatorios" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md active:scale-[0.99]">
             <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
               <Clock3 size={14} />
               Relatorios

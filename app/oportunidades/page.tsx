@@ -97,7 +97,7 @@ export default function OportunidadesPage() {
 
   return (
     <DashboardLayout title="Oportunidades de Servico">
-      <div className="space-y-7">
+      <div className="space-y-6 sm:space-y-7">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <p className="text-sm text-slate-500">
             Pipeline comercial e tecnico baseado na sua base de rastreabilidade no Supabase.
@@ -124,17 +124,17 @@ export default function OportunidadesPage() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total aberto</p>
-            <p className="mt-2 text-3xl font-black text-slate-900">{rows.length}</p>
+            <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{rows.length}</p>
           </article>
-          <article className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+          <article className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">Alta urgencia</p>
-            <p className="mt-2 text-3xl font-black text-red-700">{highUrgencyCount}</p>
+            <p className="mt-2 text-2xl font-black text-red-700 sm:text-3xl">{highUrgencyCount}</p>
           </article>
-          <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+          <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Pendentes</p>
-            <p className="mt-2 text-3xl font-black text-amber-700">{pendingCount}</p>
+            <p className="mt-2 text-2xl font-black text-amber-700 sm:text-3xl">{pendingCount}</p>
           </article>
         </section>
 
@@ -158,7 +158,7 @@ export default function OportunidadesPage() {
 
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -229,7 +229,7 @@ export default function OportunidadesPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        <section className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           <p className="font-semibold">Valor de venda</p>
           <p className="mt-1">
             Use este painel para demonstrar previsibilidade de receita com manutencao preventiva e reduzir paradas nao planejadas.

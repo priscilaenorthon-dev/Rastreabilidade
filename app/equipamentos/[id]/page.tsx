@@ -75,7 +75,7 @@ export default function EquipamentoDetalhesPage() {
   return (
     <DashboardLayout title={`Equipamento: ${equipmentId}`}>
       <div className="space-y-6">
-        <nav className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <Link href="/" className="hover:text-blue-600">
             Home
           </Link>
@@ -101,7 +101,7 @@ export default function EquipamentoDetalhesPage() {
 
         {equipment && (
           <>
-            <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-wrap items-center gap-3">
@@ -127,7 +127,7 @@ export default function EquipamentoDetalhesPage() {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-lg bg-slate-50 p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Fabricante</p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">{equipment.manufacturer ?? '-'}</p>

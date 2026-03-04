@@ -11,7 +11,7 @@ export default async function ClienteLoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="mb-6 space-y-2 text-center">
           <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white">
             <Building2 size={22} />

@@ -81,7 +81,7 @@ async function loadWithFallback<T>(loader: () => Promise<T[]>, fallback: T[]): P
 
 function assertWriteReady(): void {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase nao configurado. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY no ambiente.');
+    throw new Error('Supabase nao configurado. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY (ou NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) no ambiente.');
   }
 }
 
@@ -170,6 +170,130 @@ export async function createCompany(input: {
     return inserted;
   } catch (error) {
     throw toReadableError(error, 'Falha ao salvar empresa no Supabase.');
+  }
+}
+
+export async function getClientAccounts(): Promise<ClientAccount[]> {
+  return loadWithFallback(
+    () => selectRows<ClientAccount>('client_accounts', { orderBy: { column: 'username' } }),
+    []
+  );
+}
+
+export async function updateCompany(input: {
+  id: string;
+  name: string;
+  segment: string;
+  cnpj: string;
+  portal_username: string;
+  portal_password?: string;
+  location?: string;
+  responsible?: string;
+  email?: string;
+  phone?: string;
+  status?: CompanyStatus;
+}): Promise<Company> {
+  const portalUsername = input.portal_username.trim();
+  const portalPassword = input.portal_password?.trim() ?? '';
+
+  if (!portalUsername) {
+    throw new Error('Informe usuario do portal do cliente.');
+  }
+
+  if (portalPassword && portalPassword.length < 6) {
+    throw new Error('A senha do portal deve ter ao menos 6 caracteres.');
+  }
+
+  const payload: Partial<Company> = {
+    name: input.name.trim(),
+    segment: input.segment.trim(),
+    cnpj: input.cnpj.trim(),
+    location: input.location?.trim() || null,
+    responsible: input.responsible?.trim() || null,
+    email: input.email?.trim() || null,
+    phone: input.phone?.trim() || null,
+    status: input.status ?? 'Ativo',
+  };
+
+  assertWriteReady();
+
+  try {
+    const [existingAccountRows, accountByUsernameRows] = await Promise.all([
+      selectRows<ClientAccount>('client_accounts', {
+        filters: { company_id: input.id },
+        limit: 1,
+      }),
+      selectRows<ClientAccount>('client_accounts', {
+        filters: { username: portalUsername },
+        limit: 1,
+      }),
+    ]);
+
+    const existingAccount = existingAccountRows[0] ?? null;
+    const usernameConflict = accountByUsernameRows[0] ?? null;
+
+    if (usernameConflict && usernameConflict.company_id !== input.id) {
+      throw new Error('Usuario do portal ja existe. Escolha outro usuario.');
+    }
+
+    const updatedCompany = await updateRow<Company>('companies', { id: input.id }, payload);
+    if (!updatedCompany) {
+      throw new Error('Empresa nao encontrada para atualizacao.');
+    }
+
+    if (existingAccount) {
+      const accountPayload: {
+        username: string;
+        is_active: boolean;
+        password_hash?: string;
+      } = {
+        username: portalUsername,
+        is_active: true,
+      };
+
+      if (portalPassword) {
+        accountPayload.password_hash = await hashPassword(portalPassword);
+      }
+
+      const accountUpdated = await updateRow<ClientAccount>('client_accounts', { id: existingAccount.id }, accountPayload);
+      if (!accountUpdated) {
+        throw new Error('Empresa atualizada, mas nao foi possivel atualizar o login do cliente.');
+      }
+    } else {
+      if (!portalPassword) {
+        throw new Error('Informe a senha para criar o login do portal desta empresa.');
+      }
+
+      const accountPayload: ClientAccount = {
+        id: crypto.randomUUID(),
+        company_id: input.id,
+        username: portalUsername,
+        password_hash: await hashPassword(portalPassword),
+        is_active: true,
+      };
+
+      const accountInserted = await insertRow<ClientAccount>('client_accounts', accountPayload);
+      if (!accountInserted) {
+        throw new Error('Empresa atualizada, mas nao foi possivel criar o login do cliente.');
+      }
+    }
+
+    return updatedCompany;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao atualizar empresa no Supabase.');
+  }
+}
+
+export async function deleteCompany(id: string): Promise<void> {
+  assertWriteReady();
+
+  try {
+    const deleted = await deleteRow('companies', { id });
+    if (!deleted) {
+      throw new Error('Empresa nao encontrada para exclusao.');
+    }
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao excluir empresa no Supabase.');
   }
 }
 

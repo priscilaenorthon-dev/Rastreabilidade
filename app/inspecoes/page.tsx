@@ -153,14 +153,14 @@ export default function InspecoesPage() {
       <div className="space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-500">Controle de inspeções com CRUD conectado ao Supabase.</p>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-auto">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar inspeção"
-                className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+                className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 sm:w-auto"
               />
             </div>
             <button
@@ -178,7 +178,7 @@ export default function InspecoesPage() {
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</div>
         )}
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-700">Nova inspeção</h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
             <input
@@ -218,7 +218,7 @@ export default function InspecoesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
             >
               {saving ? 'Salvando...' : 'Salvar inspeção'}
             </button>
@@ -231,8 +231,9 @@ export default function InspecoesPage() {
           </form>
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">ID</th>
@@ -308,7 +309,8 @@ export default function InspecoesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </section>
       </div>
     </DashboardLayout>

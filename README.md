@@ -1,25 +1,23 @@
 # HoseTrack Pro
 
-Sistema web para rastreabilidade industrial de mangueiras e conexoes, com controle de empresas, equipamentos, inspecoes, manutencoes e oportunidades.
+Plataforma web de rastreabilidade industrial para gestão de mangueiras e conexões, com foco em operação, manutenção e visão comercial.
 
-## Site em producao
+## 🌐 Ambiente em produção
 
-**https://rastreabilidade-bpwc.vercel.app/**
+https://rastreabilidade-bpwc.vercel.app/
 
-## Visao geral
+## ✨ Principais recursos
 
-O HoseTrack Pro foi projetado para operacao industrial com foco em:
+- Dashboard operacional com indicadores e alertas.
+- CRUD completo de empresas, incluindo usuário e senha do portal do cliente.
+- Gestão de equipamentos com vínculo por empresa e detalhamento por ativo.
+- Gestão de inspeções e manutenções com ações de atualização/exclusão.
+- Pipeline de oportunidades com filtros e exportação CSV.
+- Relatórios executivos com exportação.
+- Portal do cliente em modo somente leitura, com escopo por empresa.
+- UI responsiva para desktop e mobile.
 
-- Cadastro e historico de empresas clientes
-- Controle de equipamentos por identificador
-- Registro de inspecoes com status e resultado
-- Registro de manutencoes com agendamento, tecnico e custo
-- Painel com indicadores operacionais
-- Oportunidades comerciais com filtros e exportacao
-- Relatorios executivos em CSV
-- Portal do cliente com acesso somente leitura
-
-## Stack tecnica
+## 🧱 Stack
 
 - Next.js 15 (App Router)
 - React 19
@@ -27,15 +25,15 @@ O HoseTrack Pro foi projetado para operacao industrial com foco em:
 - Tailwind CSS
 - Supabase (PostgreSQL + REST)
 
-## Setup local rapido
+## 🚀 Setup rápido
 
-1. Instale dependencias:
+1. Instalar dependências:
 
 ```bash
 npm install
 ```
 
-2. Configure o arquivo `.env.local`:
+2. Criar/atualizar `.env.local`:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://svhowqqwngxdrylonxul.supabase.co
@@ -43,34 +41,34 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUA_ANON_KEY>
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ztYDrpek8Sd0EdGLsRNveQ_q_yxcEJu
 ```
 
-3. Rode o projeto:
+3. Rodar em desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-## Variaveis de ambiente
+## 🔐 Variáveis de ambiente
 
-Obrigatorias:
+Obrigatórias:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
 
-Opcional:
+Opcionais:
 
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `CLIENT_PORTAL_USERNAME` (fallback de demonstracao)
-- `CLIENT_PORTAL_PASSWORD` (fallback de demonstracao)
-- `CLIENT_PORTAL_CNPJ` (fallback de demonstracao)
+- `CLIENT_PORTAL_USERNAME` (fallback demo)
+- `CLIENT_PORTAL_PASSWORD` (fallback demo)
+- `CLIENT_PORTAL_CNPJ` (fallback demo)
 
-## Bootstrap do banco (Supabase)
+## 🗄️ Banco de dados (Supabase)
 
-No SQL Editor do Supabase, execute nesta ordem:
+Executar no SQL Editor do Supabase, nesta ordem:
 
 1. `supabase/schema.sql`
 2. `supabase/seed.sql`
 
-Esses scripts criam as tabelas principais:
+Tabelas principais:
 
 - `companies`
 - `client_accounts`
@@ -79,13 +77,14 @@ Esses scripts criam as tabelas principais:
 - `inspections`
 - `maintenances`
 
-## Portal do cliente
+## 👤 Portal do cliente
 
-- URL de acesso: `/cliente/login`
-- O cadastro de empresa agora inclui `Usuario do portal` e `Senha do portal`.
-- Cada login de cliente fica vinculado a uma empresa e enxerga apenas os dados dela (somente leitura).
+- Login: `/cliente/login`
+- Cada login é vinculado a uma empresa.
+- O cliente visualiza apenas os dados da própria empresa.
+- Fluxo somente leitura no portal.
 
-## Testes rapidos
+## 🧪 Testes smoke
 
 ```bash
 node --test tests/smoke/navigation-smoke.test.mjs
@@ -95,7 +94,21 @@ node --test tests/smoke/client-portal-smoke.test.mjs
 node --test tests/smoke/client-account-provisioning-smoke.test.mjs
 ```
 
-## Observacao de seguranca
+## 🤖 Skill local de UI (Copilot)
 
-As policies de RLS no `schema.sql` estao abertas para facilitar demonstracao com chave anonima.
-Para producao, aplique politicas restritivas por usuario/perfil e mova operacoes sensiveis para backend seguro.
+Skill incluída no repositório:
+
+- `.github/skills/frontend-ui-modernizer.md`
+
+Prompt base:
+
+```text
+Use a skill frontend-ui-modernizer na tela app/empresas/page.tsx.
+Objetivo: modernizar o visual sem alterar regras de negocio.
+Restricoes: nao criar features novas e manter comportamento atual.
+```
+
+## 🛡️ Segurança (observação importante)
+
+As políticas de RLS no `supabase/schema.sql` estão abertas para facilitar demonstração com chave anônima.
+Para produção, implemente políticas restritivas por usuário/perfil e mova operações sensíveis para backend seguro.

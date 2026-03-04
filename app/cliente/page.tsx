@@ -27,7 +27,7 @@ export default async function ClienteDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
         <h1 className="text-lg font-black text-slate-900">{snapshot.company.name}</h1>
         <p className="text-sm text-slate-600">CNPJ: {snapshot.company.cnpj}</p>
         <p className="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
@@ -35,35 +35,35 @@ export default async function ClienteDashboardPage() {
         </p>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <article className="rounded-xl border border-slate-200 bg-white p-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Produtos</p>
           <p className="mt-2 text-3xl font-black text-slate-900">{snapshot.indicators.totalEquipments}</p>
         </article>
-        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Vence em 30 dias</p>
           <p className="mt-2 text-3xl font-black text-amber-800">{snapshot.indicators.expiringSoon}</p>
         </article>
-        <article className="rounded-xl border border-red-200 bg-red-50 p-4">
+        <article className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700">Vencidos</p>
           <p className="mt-2 text-3xl font-black text-red-800">{snapshot.indicators.overdue}</p>
         </article>
-        <article className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Inspecoes pendentes</p>
           <p className="mt-2 text-3xl font-black text-blue-800">{snapshot.indicators.pendingInspections}</p>
         </article>
-        <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Manutencoes abertas</p>
           <p className="mt-2 text-3xl font-black text-emerald-800">{snapshot.indicators.pendingMaintenances}</p>
         </article>
-        <article className="rounded-xl border border-slate-200 bg-white p-4">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Servicos em aberto</p>
           <p className="mt-2 text-3xl font-black text-slate-900">{snapshot.indicators.openOpportunities}</p>
         </article>
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 border-b border-slate-200 p-4">
             <Factory size={16} className="text-blue-600" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Produtos da empresa</h2>
@@ -99,7 +99,7 @@ export default async function ClienteDashboardPage() {
           </div>
         </article>
 
-        <article className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 border-b border-slate-200 p-4">
             <AlertTriangle size={16} className="text-amber-600" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Servicos e oportunidades</h2>
@@ -122,7 +122,7 @@ export default async function ClienteDashboardPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 border-b border-slate-200 p-4">
             <ClipboardCheck size={16} className="text-blue-600" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Inspecoes</h2>
@@ -145,7 +145,7 @@ export default async function ClienteDashboardPage() {
           </div>
         </article>
 
-        <article className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="flex items-center gap-2 border-b border-slate-200 p-4">
             <Wrench size={16} className="text-emerald-600" />
             <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Manutencoes</h2>

@@ -36,19 +36,19 @@ export default function LoginPage() {
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
       </div>
 
-      <main className="relative z-10 w-full max-w-md px-6 py-12">
+      <main className="relative z-10 w-full max-w-md px-4 py-8 sm:px-6 sm:py-12">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_70px_-24px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="p-8">
+          <div className="p-6 sm:p-8">
             <div className="flex flex-col items-center mb-10">
               <div className="bg-blue-600 p-3 rounded-xl mb-4 shadow-lg shadow-blue-600/30">
                 <Factory className="w-10 h-10 text-white" />
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">HoseTrack Pro</h1>
+              <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase sm:text-2xl">HoseTrack Pro</h1>
               <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 text-center">Gestão de Mangueiras e Conexões Industriais</p>
             </div>
 
@@ -71,9 +71,9 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center ml-1">
+                <div className="flex items-center justify-between gap-2 ml-1">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider" htmlFor="password">Senha</label>
-                  <a className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-wider" href="#">Esqueceu a senha?</a>
+                  <a className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-wider text-right" href="#">Esqueceu a senha?</a>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-[0.2em] py-4 rounded-xl shadow-lg shadow-blue-600/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
+              <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-blue-600/25 transition-all hover:-translate-y-px hover:bg-blue-700 hover:shadow-blue-600/35 active:scale-[0.98]" type="submit">
                 <span>Entrar no Sistema</span>
                 <LogIn size={18} />
               </button>
@@ -130,7 +130,7 @@ export default function LoginPage() {
         </footer>
       </main>
 
-      <div className="fixed top-6 right-6 flex items-center gap-4">
+      <div className="fixed right-4 top-4 hidden items-center gap-4 sm:right-6 sm:top-6 sm:flex">
         <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400">Servidor Online</span>

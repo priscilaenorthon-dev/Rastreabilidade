@@ -158,13 +158,13 @@ export default function ManutencoesPage() {
       <div className="space-y-6">
         <section className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-500">CRUD de manutenções conectado ao Supabase.</p>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar manutenção"
-              className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 sm:w-auto"
             />
           </div>
         </section>
@@ -191,7 +191,7 @@ export default function ManutencoesPage() {
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</div>
         )}
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-700">Nova manutenção</h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-7">
             <input
@@ -239,7 +239,7 @@ export default function ManutencoesPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
             >
               {saving ? 'Salvando...' : 'Salvar manutenção'}
             </button>
@@ -258,7 +258,7 @@ export default function ManutencoesPage() {
             <p className="text-sm text-slate-500">Nenhuma manutenção encontrada para os filtros aplicados.</p>
           )}
           {filteredRows.map((item) => (
-            <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
               <div className="mb-3 flex items-start justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-900">{item.id}</p>
@@ -290,7 +290,7 @@ export default function ManutencoesPage() {
                 {item.status}
               </div>
 
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 {item.status !== 'Concluida' && (
                   <button
                     type="button"

@@ -117,7 +117,7 @@ export default function EquipamentosPage() {
 
   return (
     <DashboardLayout title="Equipamentos">
-      <div className="space-y-7">
+      <div className="space-y-6 sm:space-y-7">
         <section className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <p className="text-sm text-slate-500">Cadastro tecnico de mangueiras e conectores integrado ao Supabase.</p>
           <div className="relative w-full max-w-sm">
@@ -133,8 +133,9 @@ export default function EquipamentosPage() {
 
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">ID</th>
@@ -183,15 +184,16 @@ export default function EquipamentosPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
             <PlusCircle size={16} className="text-blue-600" />
             Novo equipamento
           </h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             <input
               value={form.id}
               onChange={(event) => handleFormChange('id', event.target.value)}
@@ -239,7 +241,7 @@ export default function EquipamentosPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
             >
               {saving ? 'Salvando...' : 'Salvar equipamento'}
             </button>

@@ -15,15 +15,15 @@ interface SelectOptions {
 
 const REQUEST_TIMEOUT_MS = 8000;
 
-function getEnv(name: string): string {
-  return (process.env[name] ?? '').trim();
-}
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
+const SUPABASE_ANON_KEY = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
+const SUPABASE_PUBLISHABLE_KEY = (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? '').trim();
 
 export function getSupabaseConfig(): SupabaseConfig {
   return {
-    url: getEnv('NEXT_PUBLIC_SUPABASE_URL'),
-    anonKey: getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    publishableKey: getEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'),
+    url: SUPABASE_URL,
+    anonKey: SUPABASE_ANON_KEY,
+    publishableKey: SUPABASE_PUBLISHABLE_KEY,
   };
 }
 

@@ -2,11 +2,29 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { createCompany, getCompanies, getMaintenances } from '@/lib/data-service';
-import type { Company } from '@/lib/types';
-import { Building2, CheckCircle2, Clock3, Eye, Search, UserPlus2 } from 'lucide-react';
+import {
+  createCompany,
+  deleteCompany,
+  getClientAccounts,
+  getCompanies,
+  getMaintenances,
+  updateCompany,
+} from '@/lib/data-service';
+import type { Company, CompanyStatus } from '@/lib/types';
+import { Eye, Search, Trash2, UserPlus2 } from 'lucide-react';
 
-const EMPTY_FORM = {
+const EMPTY_FORM: {
+  name: string;
+  segment: string;
+  cnpj: string;
+  location: string;
+  responsible: string;
+  email: string;
+  phone: string;
+  portal_username: string;
+  portal_password: string;
+  status: CompanyStatus;
+} = {
   name: '',
   segment: '',
   cnpj: '',
@@ -16,16 +34,19 @@ const EMPTY_FORM = {
   phone: '',
   portal_username: '',
   portal_password: '',
+  status: 'Ativo',
 };
 
 export default function EmpresasPage() {
   const [companies, setCompanies] = React.useState<Company[]>([]);
+  const [portalUsernamesByCompanyId, setPortalUsernamesByCompanyId] = React.useState<Record<string, string>>({});
   const [maintenancePending, setMaintenancePending] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
+  const [editingCompanyId, setEditingCompanyId] = React.useState<string | null>(null);
   const [form, setForm] = React.useState(EMPTY_FORM);
 
   React.useEffect(() => {
@@ -33,12 +54,19 @@ export default function EmpresasPage() {
 
     async function load() {
       try {
-        const [companyRows, maintenanceRows] = await Promise.all([getCompanies(), getMaintenances()]);
+        const [companyRows, maintenanceRows, accountRows] = await Promise.all([
+          getCompanies(),
+          getMaintenances(),
+          getClientAccounts(),
+        ]);
         if (!active) {
           return;
         }
 
         setCompanies(companyRows);
+        setPortalUsernamesByCompanyId(
+          Object.fromEntries(accountRows.map((account) => [account.company_id, account.username]))
+        );
         setMaintenancePending(
           maintenanceRows.filter((item) => ['agendada', 'em andamento', 'pendente'].some((status) => item.status.toLowerCase().includes(status))).length
         );
@@ -77,9 +105,67 @@ export default function EmpresasPage() {
 
   const activeCompanies = companies.filter((company) => company.status === 'Ativo').length;
   const inactiveCompanies = companies.length - activeCompanies;
+  const isEditing = Boolean(editingCompanyId);
 
   const handleFormChange = (field: keyof typeof EMPTY_FORM, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleVisualizar = (company: Company) => {
+    setEditingCompanyId(company.id);
+    setForm({
+      name: company.name,
+      segment: company.segment,
+      cnpj: company.cnpj,
+      location: company.location ?? '',
+      responsible: company.responsible ?? '',
+      email: company.email ?? '',
+      phone: company.phone ?? '',
+      portal_username: portalUsernamesByCompanyId[company.id] ?? '',
+      portal_password: '',
+      status: company.status,
+    });
+    setError(null);
+    setSuccessMessage(`Empresa "${company.name}" carregada para edicao.`);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCompanyId(null);
+    setForm(EMPTY_FORM);
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const handleDelete = async (company: Company) => {
+    const confirmed = window.confirm(`Deseja realmente excluir a empresa \"${company.name}\"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteCompany(company.id);
+      setCompanies((current) => current.filter((item) => item.id !== company.id));
+      setPortalUsernamesByCompanyId((current) => {
+        const next = { ...current };
+        delete next[company.id];
+        return next;
+      });
+
+      if (editingCompanyId === company.id) {
+        setEditingCompanyId(null);
+        setForm(EMPTY_FORM);
+      }
+
+      setSuccessMessage(`Empresa "${company.name}" excluida com sucesso.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao excluir empresa.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -90,8 +176,13 @@ export default function EmpresasPage() {
       return;
     }
 
-    if (!form.portal_username.trim() || !form.portal_password.trim()) {
-      setError('Preencha usuario e senha do portal do cliente.');
+    if (!form.portal_username.trim()) {
+      setError('Preencha o usuario do portal do cliente.');
+      return;
+    }
+
+    if (!isEditing && !form.portal_password.trim()) {
+      setError('Preencha a senha do portal do cliente para novo cadastro.');
       return;
     }
 
@@ -100,22 +191,51 @@ export default function EmpresasPage() {
     setSuccessMessage(null);
 
     try {
-      const created = await createCompany({
-        name: form.name,
-        segment: form.segment,
-        cnpj: form.cnpj,
-        location: form.location,
-        responsible: form.responsible,
-        email: form.email,
-        phone: form.phone,
-        portal_username: form.portal_username,
-        portal_password: form.portal_password,
-        status: 'Ativo',
-      });
+      if (editingCompanyId) {
+        const updated = await updateCompany({
+          id: editingCompanyId,
+          name: form.name,
+          segment: form.segment,
+          cnpj: form.cnpj,
+          location: form.location,
+          responsible: form.responsible,
+          email: form.email,
+          phone: form.phone,
+          portal_username: form.portal_username,
+          portal_password: form.portal_password.trim() || undefined,
+          status: form.status,
+        });
 
-      setCompanies((current) => [created, ...current]);
+        setCompanies((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        setPortalUsernamesByCompanyId((current) => ({
+          ...current,
+          [editingCompanyId]: form.portal_username.trim(),
+        }));
+        setSuccessMessage(`Empresa "${updated.name}" atualizada com sucesso.`);
+      } else {
+        const created = await createCompany({
+          name: form.name,
+          segment: form.segment,
+          cnpj: form.cnpj,
+          location: form.location,
+          responsible: form.responsible,
+          email: form.email,
+          phone: form.phone,
+          portal_username: form.portal_username,
+          portal_password: form.portal_password,
+          status: form.status,
+        });
+
+        setCompanies((current) => [created, ...current]);
+        setPortalUsernamesByCompanyId((current) => ({
+          ...current,
+          [created.id]: form.portal_username.trim(),
+        }));
+        setSuccessMessage(`Empresa "${created.name}" salva no Supabase com sucesso.`);
+      }
+
       setForm(EMPTY_FORM);
-      setSuccessMessage(`Empresa "${created.name}" salva no Supabase com sucesso.`);
+      setEditingCompanyId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar empresa.');
     } finally {
@@ -125,7 +245,7 @@ export default function EmpresasPage() {
 
   return (
     <DashboardLayout title="Gestao de Empresas">
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm text-slate-500">Cadastro de clientes industriais conectado ao Supabase.</p>
@@ -143,21 +263,21 @@ export default function EmpresasPage() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <article className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <article className="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Total de empresas</p>
-            <p className="mt-2 text-3xl font-black text-blue-800">{companies.length}</p>
+            <p className="mt-2 text-2xl font-black text-blue-800 sm:text-3xl">{companies.length}</p>
           </article>
-          <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Ativas</p>
-            <p className="mt-2 text-3xl font-black text-emerald-800">{activeCompanies}</p>
+            <p className="mt-2 text-2xl font-black text-emerald-800 sm:text-3xl">{activeCompanies}</p>
           </article>
-          <article className="rounded-xl border border-slate-200 bg-white p-4">
+          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">Inativas</p>
-            <p className="mt-2 text-3xl font-black text-slate-900">{inactiveCompanies}</p>
+            <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">{inactiveCompanies}</p>
           </article>
-          <article className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <article className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition-shadow hover:shadow-md">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Manutencoes pendentes</p>
-            <p className="mt-2 text-3xl font-black text-amber-800">{maintenancePending}</p>
+            <p className="mt-2 text-2xl font-black text-amber-800 sm:text-3xl">{maintenancePending}</p>
           </article>
         </section>
 
@@ -182,6 +302,7 @@ export default function EmpresasPage() {
                   <th className="px-4 py-3">CNPJ</th>
                   <th className="px-4 py-3">Segmento</th>
                   <th className="px-4 py-3">Responsavel</th>
+                  <th className="px-4 py-3">Usuario portal</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Acao</th>
                 </tr>
@@ -189,14 +310,14 @@ export default function EmpresasPage() {
               <tbody className="divide-y divide-slate-100 text-sm">
                 {loading && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-5 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-5 text-center text-slate-500">
                       Carregando empresas...
                     </td>
                   </tr>
                 )}
                 {!loading && filteredCompanies.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-5 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-5 text-center text-slate-500">
                       Nenhuma empresa encontrada para o filtro informado.
                     </td>
                   </tr>
@@ -210,6 +331,7 @@ export default function EmpresasPage() {
                     <td className="px-4 py-3 font-mono text-xs">{company.cnpj}</td>
                     <td className="px-4 py-3">{company.segment}</td>
                     <td className="px-4 py-3">{company.responsible ?? '-'}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{portalUsernamesByCompanyId[company.id] ?? '-'}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2 py-1 text-xs font-semibold ${
@@ -222,9 +344,20 @@ export default function EmpresasPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50">
+                      <button
+                        onClick={() => handleVisualizar(company)}
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 hover:-translate-y-px hover:bg-blue-100"
+                      >
                         <Eye size={14} />
                         Visualizar
+                      </button>
+                      <button
+                        onClick={() => void handleDelete(company)}
+                        disabled={saving}
+                        className="ml-2 inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 hover:-translate-y-px hover:bg-red-100 disabled:opacity-60"
+                      >
+                        <Trash2 size={14} />
+                        Excluir
                       </button>
                     </td>
                   </tr>
@@ -234,10 +367,10 @@ export default function EmpresasPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
             <UserPlus2 size={16} className="text-blue-600" />
-            Novo cadastro de empresa
+            {isEditing ? 'Visualizacao e edicao da empresa' : 'Novo cadastro de empresa'}
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <input
@@ -258,6 +391,14 @@ export default function EmpresasPage() {
               placeholder="Segmento"
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
             />
+            <select
+              value={form.status}
+              onChange={(event) => handleFormChange('status', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+            </select>
             <input
               value={form.location}
               onChange={(event) => handleFormChange('location', event.target.value)}
@@ -292,16 +433,25 @@ export default function EmpresasPage() {
               type="password"
               value={form.portal_password}
               onChange={(event) => handleFormChange('portal_password', event.target.value)}
-              placeholder="Senha do portal"
+              placeholder={isEditing ? 'Nova senha do portal (opcional)' : 'Senha do portal'}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
             />
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
             >
-              {saving ? 'Salvando...' : 'Salvar empresa'}
+              {saving ? 'Salvando...' : isEditing ? 'Salvar alteracoes' : 'Salvar empresa'}
             </button>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:-translate-y-px hover:bg-slate-50"
+              >
+                Cancelar edicao
+              </button>
+            )}
           </form>
         </section>
       </div>

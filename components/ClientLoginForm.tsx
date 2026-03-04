@@ -47,7 +47,7 @@ export function ClientLoginForm() {
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="space-y-1">
         <label htmlFor="client-username" className="text-xs font-semibold text-slate-600">
           Usuario
@@ -58,7 +58,7 @@ export function ClientLoginForm() {
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="Digite seu usuario"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/30"
         />
       </div>
 
@@ -72,7 +72,7 @@ export function ClientLoginForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Digite sua senha"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/30"
         />
       </div>
 
@@ -81,7 +81,7 @@ export function ClientLoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
       >
         <span>{loading ? 'Entrando...' : 'Entrar como cliente'}</span>
         <LogIn size={16} />
