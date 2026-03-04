@@ -81,7 +81,7 @@ export default function EquipamentosPage() {
     });
   }, [equipments, query, companyMap]);
 
-  const handleFormChange = (field: keyof typeof EMPTY_FORM, value: string) => {
+  const handleFormChange = <K extends keyof typeof EMPTY_FORM>(field: K, value: (typeof EMPTY_FORM)[K]) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -206,7 +206,7 @@ export default function EquipamentosPage() {
             />
             <select
               value={form.category}
-              onChange={(event) => handleFormChange('category', event.target.value)}
+              onChange={(event) => handleFormChange('category', event.target.value as Equipment['category'])}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
             >
               <option value="Mangueira">Mangueira</option>
