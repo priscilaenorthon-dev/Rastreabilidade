@@ -118,10 +118,7 @@ export async function selectRows<T>(table: string, options: SelectOptions = {}):
   return Array.isArray(data) ? data : [];
 }
 
-export async function insertRow<T, P extends object = Record<string, unknown>>(
-  table: string,
-  payload: P
-): Promise<T | null> {
+export async function insertRow<T>(table: string, payload: object): Promise<T | null> {
   const data = await requestJson<T[]>(table, {
     method: 'POST',
     headers: {
