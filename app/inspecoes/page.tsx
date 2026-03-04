@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { createInspection, deleteInspection, getInspectionViews, updateInspectionStatus } from '@/lib/data-service';
-import type { InspectionView } from '@/lib/types';
+import { createInspection, deleteInspection, getEquipments, getInspectionViews, updateInspectionStatus } from '@/lib/data-service';
+import type { Equipment, InspectionView } from '@/lib/types';
 import { CheckCircle2, CircleAlert, ClipboardCheck, Search, Trash2 } from 'lucide-react';
 
 function formatDate(value: string): string {
@@ -26,6 +26,7 @@ const EMPTY_FORM = {
 
 export default function InspecoesPage() {
   const [rows, setRows] = React.useState<InspectionView[]>([]);
+  const [equipments, setEquipments] = React.useState<Equipment[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
@@ -45,6 +46,11 @@ export default function InspecoesPage() {
     }
   }, []);
 
+  const loadEquipments = React.useCallback(async () => {
+    const equipmentRows = await getEquipments();
+    setEquipments(equipmentRows);
+  }, []);
+
   React.useEffect(() => {
     let active = true;
 
@@ -53,7 +59,11 @@ export default function InspecoesPage() {
         return;
       }
       setLoading(true);
-      await loadRows();
+      try {
+        await Promise.all([loadRows(), loadEquipments()]);
+      } catch {
+        // handled in individual loaders
+      }
       if (active) {
         setLoading(false);
       }
@@ -64,7 +74,7 @@ export default function InspecoesPage() {
     return () => {
       active = false;
     };
-  }, [loadRows]);
+  }, [loadRows, loadEquipments]);
 
   const filtered = React.useMemo(() => {
     return rows.filter((item) => {
@@ -90,6 +100,11 @@ export default function InspecoesPage() {
 
     if (!form.equipment_id.trim() || !form.inspector.trim()) {
       setError('Informe equipamento e inspetor para salvar a inspeção.');
+      return;
+    }
+
+    if (!equipments.some((item) => item.id === form.equipment_id)) {
+      setError('Selecione um equipamento válido para salvar a inspeção.');
       return;
     }
 
@@ -181,12 +196,19 @@ export default function InspecoesPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-700">Nova inspeção</h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <input
+            <select
               value={form.equipment_id}
               onChange={(event) => handleFormChange('equipment_id', event.target.value)}
-              placeholder="Equipamento ID"
+              disabled={equipments.length === 0}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
-            />
+            >
+              <option value="">{equipments.length === 0 ? 'Cadastre um equipamento primeiro' : 'Selecione o equipamento'}</option>
+              {equipments.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.id} - {item.type}
+                </option>
+              ))}
+            </select>
             <input
               value={form.inspector}
               onChange={(event) => handleFormChange('inspector', event.target.value)}

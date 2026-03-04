@@ -3,9 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { createEquipment, getCompanies, getEquipments } from '@/lib/data-service';
+import { createEquipment, deleteEquipment, getCompanies, getEquipments, updateEquipment } from '@/lib/data-service';
 import type { Company, Equipment } from '@/lib/types';
-import { PlusCircle, QrCode, Search } from 'lucide-react';
+import { Pencil, PlusCircle, QrCode, Search, Trash2 } from 'lucide-react';
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -32,7 +32,10 @@ export default function EquipamentosPage() {
   const [companies, setCompanies] = React.useState<Company[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<string | null>(null);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
   const [form, setForm] = React.useState(EMPTY_FORM);
 
@@ -95,24 +98,83 @@ export default function EquipamentosPage() {
 
     setSaving(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      const created = await createEquipment({
-        id: form.id,
-        type: form.type,
-        category: form.category,
-        company_id: form.company_id || null,
-        status: form.status,
-        expires_at: form.expires_at || null,
-      });
+      if (editingId) {
+        const updated = await updateEquipment({
+          id: editingId,
+          type: form.type,
+          category: form.category,
+          company_id: form.company_id || null,
+          status: form.status,
+          expires_at: form.expires_at || null,
+        });
 
-      setEquipments((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+        setEquipments((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        setSuccessMessage(`Equipamento ${updated.id} atualizado.`);
+      } else {
+        const created = await createEquipment({
+          id: form.id,
+          type: form.type,
+          category: form.category,
+          company_id: form.company_id || null,
+          status: form.status,
+          expires_at: form.expires_at || null,
+        });
+
+        setEquipments((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+        setSuccessMessage(`Equipamento ${created.id} criado.`);
+      }
+
+      setEditingId(null);
       setForm(EMPTY_FORM);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar equipamento.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (item: Equipment) => {
+    setEditingId(item.id);
+    setError(null);
+    setSuccessMessage(null);
+    setForm({
+      id: item.id,
+      type: item.type,
+      category: item.category,
+      company_id: item.company_id ?? '',
+      status: item.status,
+      expires_at: item.expires_at ?? '',
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    setBusyId(id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteEquipment(id);
+      setEquipments((current) => current.filter((item) => item.id !== id));
+      if (editingId === id) {
+        setEditingId(null);
+        setForm(EMPTY_FORM);
+      }
+      setSuccessMessage(`Equipamento ${id} excluido.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao excluir equipamento.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   return (
@@ -132,6 +194,9 @@ export default function EquipamentosPage() {
         </section>
 
         {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {successMessage && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</div>
+        )}
 
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
           <div className="overflow-x-auto">
@@ -173,13 +238,33 @@ export default function EquipamentosPage() {
                     <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{item.status}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/equipamentos/${item.id}`}
-                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
-                    >
-                      <QrCode size={14} />
-                      Detalhes
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(item)}
+                        disabled={busyId === item.id}
+                        className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-60"
+                      >
+                        <Pencil size={13} />
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item.id)}
+                        disabled={busyId === item.id}
+                        className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                      >
+                        <Trash2 size={13} />
+                        Excluir
+                      </button>
+                      <Link
+                        href={`/equipamentos/${item.id}`}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                      >
+                        <QrCode size={14} />
+                        Visualizar
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -191,13 +276,14 @@ export default function EquipamentosPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
             <PlusCircle size={16} className="text-blue-600" />
-            Novo equipamento
+            {editingId ? `Editando equipamento ${editingId}` : 'Novo equipamento'}
           </h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             <input
               value={form.id}
               onChange={(event) => handleFormChange('id', event.target.value)}
               placeholder="ID (ex.: MANG-9001)"
+              disabled={Boolean(editingId)}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
             />
             <input
@@ -243,8 +329,17 @@ export default function EquipamentosPage() {
               disabled={saving}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
             >
-              {saving ? 'Salvando...' : 'Salvar equipamento'}
+              {saving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Salvar equipamento'}
             </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancelar edição
+              </button>
+            )}
           </form>
         </section>
       </div>

@@ -9,10 +9,13 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8');
 }
 
-test('data service exposes inspection and maintenance CRUD operations', () => {
+test('data service exposes inspection, maintenance and equipment CRUD operations', () => {
   const dataService = read('lib/data-service.ts');
 
   for (const fnName of [
+    'createEquipment',
+    'updateEquipment',
+    'deleteEquipment',
     'createInspection',
     'updateInspectionStatus',
     'deleteInspection',
@@ -26,6 +29,16 @@ test('data service exposes inspection and maintenance CRUD operations', () => {
       `Missing CRUD function: ${fnName}`
     );
   }
+});
+
+test('equipment page wires create, edit and delete actions to CRUD service', () => {
+  const page = read('app/equipamentos/page.tsx');
+
+  assert.match(page, /createEquipment\(/, 'Equipamentos page should call createEquipment');
+  assert.match(page, /updateEquipment\(/, 'Equipamentos page should call updateEquipment');
+  assert.match(page, /deleteEquipment\(/, 'Equipamentos page should call deleteEquipment');
+  assert.match(page, /Editar|Salvar alterações/, 'Equipamentos page should expose edit flow in UI');
+  assert.match(page, /Excluir/, 'Equipamentos page should expose delete action in UI');
 });
 
 test('supabase rest helper supports update and delete mutations', () => {

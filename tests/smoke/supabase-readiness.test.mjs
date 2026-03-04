@@ -28,6 +28,16 @@ test('supabase SQL bootstrap files exist with core entities', () => {
   for (const tableName of ['companies', 'equipments', 'opportunities', 'inspections', 'maintenances']) {
     assert.match(schema, new RegExp(`create table if not exists\\s+public\\.${tableName}`, 'i'), `Missing table ${tableName}`);
   }
+
+  for (const policyName of [
+    'companies_delete_public',
+    'equipments_delete_public',
+    'opportunities_delete_public',
+    'inspections_delete_public',
+    'maintenances_delete_public',
+  ]) {
+    assert.match(schema, new RegExp(`create policy\\s+${policyName}`, 'i'), `Missing delete policy ${policyName}`);
+  }
 });
 
 test('centralized supabase data service exists', () => {

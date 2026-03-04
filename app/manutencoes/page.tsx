@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { createMaintenance, deleteMaintenance, getMaintenanceViews, updateMaintenanceStatus } from '@/lib/data-service';
-import type { MaintenanceView } from '@/lib/types';
+import { createMaintenance, deleteMaintenance, getEquipments, getMaintenanceViews, updateMaintenanceStatus } from '@/lib/data-service';
+import type { Equipment, MaintenanceView } from '@/lib/types';
 import { CircleCheck, Clock3, Search, Trash2, Wrench } from 'lucide-react';
 
 function formatDate(value: string): string {
@@ -27,6 +27,7 @@ const EMPTY_FORM = {
 
 export default function ManutencoesPage() {
   const [rows, setRows] = React.useState<MaintenanceView[]>([]);
+  const [equipments, setEquipments] = React.useState<Equipment[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
@@ -46,6 +47,11 @@ export default function ManutencoesPage() {
     }
   }, []);
 
+  const loadEquipments = React.useCallback(async () => {
+    const equipmentRows = await getEquipments();
+    setEquipments(equipmentRows);
+  }, []);
+
   React.useEffect(() => {
     let active = true;
 
@@ -54,7 +60,11 @@ export default function ManutencoesPage() {
         return;
       }
       setLoading(true);
-      await loadRows();
+      try {
+        await Promise.all([loadRows(), loadEquipments()]);
+      } catch {
+        // handled in individual loaders
+      }
       if (active) {
         setLoading(false);
       }
@@ -65,7 +75,7 @@ export default function ManutencoesPage() {
     return () => {
       active = false;
     };
-  }, [loadRows]);
+  }, [loadRows, loadEquipments]);
 
   const filteredRows = React.useMemo(() => {
     return rows.filter((item) => {
@@ -93,6 +103,11 @@ export default function ManutencoesPage() {
 
     if (!form.equipment_id.trim()) {
       setError('Informe o ID do equipamento para salvar a manutenção.');
+      return;
+    }
+
+    if (!equipments.some((item) => item.id === form.equipment_id)) {
+      setError('Selecione um equipamento válido para salvar a manutenção.');
       return;
     }
 
@@ -194,12 +209,19 @@ export default function ManutencoesPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-700">Nova manutenção</h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-7">
-            <input
+            <select
               value={form.equipment_id}
               onChange={(event) => handleFormChange('equipment_id', event.target.value)}
-              placeholder="Equipamento ID"
+              disabled={equipments.length === 0}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
-            />
+            >
+              <option value="">{equipments.length === 0 ? 'Cadastre um equipamento primeiro' : 'Selecione o equipamento'}</option>
+              {equipments.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.id} - {item.type}
+                </option>
+              ))}
+            </select>
             <select
               value={form.maintenance_type}
               onChange={(event) => handleFormChange('maintenance_type', event.target.value)}

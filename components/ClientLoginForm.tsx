@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn } from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, User } from 'lucide-react';
 
 export function ClientLoginForm() {
   const router = useRouter();
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
@@ -49,39 +50,53 @@ export function ClientLoginForm() {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="space-y-1">
-        <label htmlFor="client-username" className="text-xs font-semibold text-slate-600">
+        <label htmlFor="client-username" className="text-xs font-semibold text-slate-300">
           Usuario
         </label>
-        <input
-          id="client-username"
-          type="text"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          placeholder="Digite seu usuario"
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/30"
-        />
+        <div className="relative">
+          <User size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            id="client-username"
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="Digite seu usuario"
+            className="w-full rounded-xl border border-white/15 bg-white/10 py-2.5 pl-9 pr-3 text-sm text-white outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30"
+          />
+        </div>
       </div>
 
       <div className="space-y-1">
-        <label htmlFor="client-password" className="text-xs font-semibold text-slate-600">
+        <label htmlFor="client-password" className="text-xs font-semibold text-slate-300">
           Senha
         </label>
-        <input
-          id="client-password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Digite sua senha"
-          className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/30"
-        />
+        <div className="relative">
+          <Lock size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            id="client-password"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Digite sua senha"
+            className="w-full rounded-xl border border-white/15 bg-white/10 py-2.5 pl-9 pr-10 text-sm text-white outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((value) => !value)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white"
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
       </div>
 
-      {errorMessage && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="rounded-lg border border-red-300/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200">{errorMessage}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-px hover:bg-blue-700 hover:shadow-md disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-px hover:bg-blue-700 disabled:opacity-60"
       >
         <span>{loading ? 'Entrando...' : 'Entrar como cliente'}</span>
         <LogIn size={16} />

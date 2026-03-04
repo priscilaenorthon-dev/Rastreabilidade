@@ -71,11 +71,43 @@ async function loadWithFallback<T>(loader: () => Promise<T[]>, fallback: T[]): P
   }
 
   try {
-    const data = await loader();
-    return data.length > 0 ? data : fallback;
+    return await loader();
   } catch (error) {
     logSupabaseError(error);
     return fallback;
+  }
+}
+
+async function ensureDeleteSucceeded(table: string, id: string, label: string): Promise<void> {
+  const deleted = await deleteRow(table, { id });
+  if (deleted) {
+    return;
+  }
+
+  const stillExists = await selectRows<{ id: string }>(table, {
+    select: 'id',
+    filters: { id },
+    limit: 1,
+  });
+
+  if (stillExists.length > 0) {
+    throw new Error(
+      `${label} existe, mas a exclusao foi bloqueada no Supabase. Ative policy DELETE para ${table}.`
+    );
+  }
+
+  throw new Error(`${label} nao encontrado para exclusao.`);
+}
+
+async function assertEquipmentExists(equipmentId: string): Promise<void> {
+  const equipmentRows = await selectRows<Equipment>('equipments', {
+    select: 'id',
+    filters: { id: equipmentId },
+    limit: 1,
+  });
+
+  if (equipmentRows.length === 0) {
+    throw new Error('Equipamento nao encontrado. Cadastre ou selecione um equipamento valido.');
   }
 }
 
@@ -288,10 +320,7 @@ export async function deleteCompany(id: string): Promise<void> {
   assertWriteReady();
 
   try {
-    const deleted = await deleteRow('companies', { id });
-    if (!deleted) {
-      throw new Error('Empresa nao encontrada para exclusao.');
-    }
+    await ensureDeleteSucceeded('companies', id, 'Empresa');
   } catch (error) {
     throw toReadableError(error, 'Falha ao excluir empresa no Supabase.');
   }
@@ -335,6 +364,45 @@ export async function createEquipment(input: Partial<Equipment> & { id: string; 
     return inserted;
   } catch (error) {
     throw toReadableError(error, 'Falha ao salvar equipamento no Supabase.');
+  }
+}
+
+export async function updateEquipment(input: {
+  id: string;
+  type: string;
+  category: Equipment['category'];
+  company_id?: string | null;
+  status?: string;
+  expires_at?: string | null;
+}): Promise<Equipment> {
+  assertWriteReady();
+
+  const payload: Partial<Equipment> = {
+    type: input.type.trim(),
+    category: input.category,
+    company_id: input.company_id ?? null,
+    status: input.status?.trim() || 'Ativo',
+    expires_at: input.expires_at ?? null,
+  };
+
+  try {
+    const updated = await updateRow<Equipment>('equipments', { id: input.id.trim() }, payload);
+    if (!updated) {
+      throw new Error('Equipamento nao encontrado para atualizacao.');
+    }
+    return updated;
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao atualizar equipamento no Supabase.');
+  }
+}
+
+export async function deleteEquipment(id: string): Promise<void> {
+  assertWriteReady();
+
+  try {
+    await ensureDeleteSucceeded('equipments', id, 'Equipamento');
+  } catch (error) {
+    throw toReadableError(error, 'Falha ao excluir equipamento no Supabase.');
   }
 }
 
@@ -399,6 +467,8 @@ export async function createInspection(input: {
   };
 
   try {
+    await assertEquipmentExists(payload.equipment_id);
+
     const inserted = await insertRow<Inspection>('inspections', payload);
     if (!inserted) {
       throw new Error('Supabase retornou resposta vazia ao criar inspecao.');
@@ -436,10 +506,7 @@ export async function deleteInspection(id: string): Promise<void> {
   assertWriteReady();
 
   try {
-    const deleted = await deleteRow('inspections', { id });
-    if (!deleted) {
-      throw new Error('Inspecao nao encontrada para exclusao.');
-    }
+    await ensureDeleteSucceeded('inspections', id, 'Inspecao');
   } catch (error) {
     throw toReadableError(error, 'Falha ao excluir inspecao no Supabase.');
   }
@@ -485,6 +552,8 @@ export async function createMaintenance(input: {
   };
 
   try {
+    await assertEquipmentExists(payload.equipment_id);
+
     const inserted = await insertRow<Maintenance>('maintenances', payload);
     if (!inserted) {
       throw new Error('Supabase retornou resposta vazia ao criar manutencao.');
@@ -524,10 +593,7 @@ export async function deleteMaintenance(id: string): Promise<void> {
   assertWriteReady();
 
   try {
-    const deleted = await deleteRow('maintenances', { id });
-    if (!deleted) {
-      throw new Error('Manutencao nao encontrada para exclusao.');
-    }
+    await ensureDeleteSucceeded('maintenances', id, 'Manutencao');
   } catch (error) {
     throw toReadableError(error, 'Falha ao excluir manutencao no Supabase.');
   }

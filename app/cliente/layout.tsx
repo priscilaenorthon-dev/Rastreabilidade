@@ -1,5 +1,4 @@
 import React from 'react';
-import { redirect } from 'next/navigation';
 import { Building2 } from 'lucide-react';
 import { getClientPortalSession } from '@/lib/client-portal-auth';
 import { ClientLogoutButton } from '@/components/ClientLogoutButton';
@@ -7,7 +6,7 @@ import { ClientLogoutButton } from '@/components/ClientLogoutButton';
 export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
   const session = await getClientPortalSession();
   if (!session) {
-    redirect('/cliente/login');
+    return <>{children}</>;
   }
 
   return (

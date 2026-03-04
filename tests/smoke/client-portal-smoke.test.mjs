@@ -48,6 +48,15 @@ test('middleware keeps client user restricted to /cliente routes', () => {
   assert.match(middleware, /url\.pathname = '\/cliente'/, 'Middleware should redirect authenticated client to /cliente');
 });
 
+test('client layout does not self-redirect to /cliente/login', () => {
+  const layout = read('app/cliente/layout.tsx');
+  assert.doesNotMatch(
+    layout,
+    /redirect\('\/cliente\/login'\)/,
+    'Client layout should not redirect to /cliente/login to avoid redirect loops'
+  );
+});
+
 test('data service exposes scoped read-only snapshot for client portal', () => {
   const dataService = read('lib/data-service.ts');
   assert.match(dataService, /export\s+async\s+function\s+getClientReadonlySnapshot\s*\(/, 'Missing getClientReadonlySnapshot in data service');

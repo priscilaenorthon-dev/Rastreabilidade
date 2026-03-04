@@ -107,6 +107,9 @@ create policy companies_insert_public on public.companies for insert with check 
 drop policy if exists companies_update_public on public.companies;
 create policy companies_update_public on public.companies for update using (true) with check (true);
 
+drop policy if exists companies_delete_public on public.companies;
+create policy companies_delete_public on public.companies for delete using (true);
+
 drop policy if exists client_accounts_select_public on public.client_accounts;
 create policy client_accounts_select_public on public.client_accounts for select using (true);
 
@@ -115,6 +118,9 @@ create policy client_accounts_insert_public on public.client_accounts for insert
 
 drop policy if exists client_accounts_update_public on public.client_accounts;
 create policy client_accounts_update_public on public.client_accounts for update using (true) with check (true);
+
+drop policy if exists client_accounts_delete_public on public.client_accounts;
+create policy client_accounts_delete_public on public.client_accounts for delete using (true);
 
 drop policy if exists equipments_select_public on public.equipments;
 create policy equipments_select_public on public.equipments for select using (true);
@@ -125,6 +131,9 @@ create policy equipments_insert_public on public.equipments for insert with chec
 drop policy if exists equipments_update_public on public.equipments;
 create policy equipments_update_public on public.equipments for update using (true) with check (true);
 
+drop policy if exists equipments_delete_public on public.equipments;
+create policy equipments_delete_public on public.equipments for delete using (true);
+
 drop policy if exists opportunities_select_public on public.opportunities;
 create policy opportunities_select_public on public.opportunities for select using (true);
 
@@ -133,6 +142,9 @@ create policy opportunities_insert_public on public.opportunities for insert wit
 
 drop policy if exists opportunities_update_public on public.opportunities;
 create policy opportunities_update_public on public.opportunities for update using (true) with check (true);
+
+drop policy if exists opportunities_delete_public on public.opportunities;
+create policy opportunities_delete_public on public.opportunities for delete using (true);
 
 drop policy if exists inspections_select_public on public.inspections;
 create policy inspections_select_public on public.inspections for select using (true);
@@ -143,6 +155,9 @@ create policy inspections_insert_public on public.inspections for insert with ch
 drop policy if exists inspections_update_public on public.inspections;
 create policy inspections_update_public on public.inspections for update using (true) with check (true);
 
+drop policy if exists inspections_delete_public on public.inspections;
+create policy inspections_delete_public on public.inspections for delete using (true);
+
 drop policy if exists maintenances_select_public on public.maintenances;
 create policy maintenances_select_public on public.maintenances for select using (true);
 
@@ -151,3 +166,6 @@ create policy maintenances_insert_public on public.maintenances for insert with 
 
 drop policy if exists maintenances_update_public on public.maintenances;
 create policy maintenances_update_public on public.maintenances for update using (true) with check (true);
+
+drop policy if exists maintenances_delete_public on public.maintenances;
+create policy maintenances_delete_public on public.maintenances for delete using (true);
