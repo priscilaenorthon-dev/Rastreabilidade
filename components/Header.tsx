@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Search, Bell, HelpCircle, User } from 'lucide-react';
 
 interface HeaderProps {
@@ -25,20 +26,20 @@ export function Header({ title }: HeaderProps) {
         </div>
         
         <div className="flex items-center gap-2">
-          <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors">
+          <Link href="/oportunidades" className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors" aria-label="Abrir oportunidades">
             <Bell size={20} />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-          </button>
-          <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          </Link>
+          <Link href="/relatorios" className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" aria-label="Abrir relatorios">
             <HelpCircle size={20} />
-          </button>
+          </Link>
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2"></div>
-          <button className="flex items-center gap-2 p-1 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          <Link href="/login" className="flex items-center gap-2 p-1 pr-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600">
               <User size={16} />
             </div>
             <span className="text-sm font-medium hidden sm:block">Perfil</span>
-          </button>
+          </Link>
         </div>
       </div>
     </header>

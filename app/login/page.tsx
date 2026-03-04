@@ -2,10 +2,28 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Factory, User, Lock, Eye, LogIn, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import { Factory, User, Lock, Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = React.useState('admin');
+  const [password, setPassword] = React.useState('admin1234');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage('Informe usuário e senha para continuar.');
+      return;
+    }
+
+    setErrorMessage('');
+    router.push('/');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative overflow-hidden font-sans">
       {/* Background Elements */}
@@ -34,7 +52,7 @@ export default function LoginPage() {
               <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 text-center">Gestão de Mangueiras e Conexões Industriais</p>
             </div>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1" htmlFor="username">Usuário</label>
                 <div className="relative group">
@@ -46,7 +64,8 @@ export default function LoginPage() {
                     id="username" 
                     placeholder="Digite seu usuário" 
                     type="text" 
-                    defaultValue="admin"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
                   />
                 </div>
               </div>
@@ -64,11 +83,17 @@ export default function LoginPage() {
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3.5 pl-11 pr-12 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all outline-none text-sm font-medium" 
                     id="password" 
                     placeholder="Digite sua senha" 
-                    type="password" 
-                    defaultValue="admin1234"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                   />
-                  <button className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" type="button">
-                    <Eye size={18} />
+                  <button
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
@@ -78,12 +103,16 @@ export default function LoginPage() {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider" htmlFor="remember">Lembrar acesso</label>
               </div>
 
-              <Link href="/" className="w-full">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-[0.2em] py-4 rounded-xl shadow-lg shadow-blue-600/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
-                  <span>Entrar no Sistema</span>
-                  <LogIn size={18} />
-                </button>
-              </Link>
+              {errorMessage && (
+                <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+                  {errorMessage}
+                </p>
+              )}
+
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-[0.2em] py-4 rounded-xl shadow-lg shadow-blue-600/25 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2" type="submit">
+                <span>Entrar no Sistema</span>
+                <LogIn size={18} />
+              </button>
             </form>
 
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-4">

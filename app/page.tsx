@@ -1,220 +1,256 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Clock, 
-  Package,
-  MoreVertical,
-  Activity
-} from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import { getDashboardSnapshot } from '@/lib/data-service';
+import type { DashboardSnapshot } from '@/lib/types';
+import { AlertTriangle, ArrowRight, Building2, ClipboardCheck, Clock3, Factory, Wrench } from 'lucide-react';
 
-const kpiData = [
-  { label: 'Total Mangueiras', value: '1.240', change: '+5%', trend: 'up', icon: Package },
-  { label: 'Total Conectores', value: '3.850', change: '-2%', trend: 'down', icon: Activity },
-  { label: 'Prox. Vencimento', value: '42', change: '+12%', trend: 'up', icon: Clock },
-  { label: 'Vencidos', value: '15', change: 'Crítico', trend: 'danger', icon: AlertTriangle },
-  { label: 'Em Manutenção', value: '08', change: 'Estável', trend: 'neutral', icon: Activity },
-  { label: 'Oportunidades', value: '24', change: '+8%', trend: 'up', icon: CheckCircle2 },
-];
+function StatCard({
+  title,
+  value,
+  helper,
+  tone = 'slate',
+}: {
+  title: string;
+  value: number;
+  helper: string;
+  tone?: 'slate' | 'red' | 'amber' | 'blue' | 'emerald';
+}) {
+  const toneClass = {
+    slate: 'border-slate-200 bg-white text-slate-900',
+    red: 'border-red-200 bg-red-50 text-red-700',
+    amber: 'border-amber-200 bg-amber-50 text-amber-700',
+    blue: 'border-blue-200 bg-blue-50 text-blue-700',
+    emerald: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  }[tone];
 
-const barData = [
-  { name: 'Empresa A', value: 1250 },
-  { name: 'Empresa B', value: 980 },
-  { name: 'Empresa C', value: 520 },
-  { name: 'Empresa D', value: 1100 },
-  { name: 'Empresa E', value: 780 },
-];
-
-const statusData = [
-  { name: 'Ativo', value: 4780, color: '#2563eb' },
-  { name: 'Manut.', value: 310, color: '#eab308' },
-  { name: 'Vencido', value: 150, color: '#ef4444' },
-];
-
-const alerts = [
-  { id: '#MANG-7742', company: 'Petrobras - Refinaria A', type: 'Alta Pressão 2"', date: '12/05/2024', status: 'VENCIDO' },
-  { id: '#CONN-1029', company: 'Vale - Mina Norte', type: 'Conector Hidráulico', date: '05/06/2024', status: 'PROX. VENCIMENTO' },
-  { id: '#MANG-8821', company: 'ArcelorMittal - Usina', type: 'Mangueira Sucção', date: '14/05/2024', status: 'VENCIDO' },
-  { id: '#MANG-2210', company: 'Braskem - Polo', type: 'Composto Químico', date: '12/07/2024', status: 'EM MANUTENÇÃO' },
-];
+  return (
+    <article className={`rounded-xl border p-4 shadow-sm ${toneClass}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide">{title}</p>
+      <p className="mt-2 text-3xl font-black">{value}</p>
+      <p className="mt-1 text-xs opacity-80">{helper}</p>
+    </article>
+  );
+}
 
 export default function DashboardPage() {
-  return (
-    <DashboardLayout title="Dashboard Principal">
-      {/* KPI Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        {kpiData.map((kpi) => (
-          <div 
-            key={kpi.label}
-            className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-500">
-                <kpi.icon size={18} />
-              </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                kpi.trend === 'up' ? 'bg-emerald-50 text-emerald-600' :
-                kpi.trend === 'down' ? 'bg-red-50 text-red-600' :
-                kpi.trend === 'danger' ? 'bg-red-600 text-white' :
-                'bg-slate-100 text-slate-600'
-              }`}>
-                {kpi.change}
-              </span>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
-              {kpi.label}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{kpi.value}</p>
-          </div>
-        ))}
-      </div>
+  const [snapshot, setSnapshot] = React.useState<DashboardSnapshot | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Bar Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-800 dark:text-white">Equipamentos por Empresa</h3>
-            <select className="text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none">
-              <option>Últimos 30 dias</option>
-              <option>Este Ano</option>
-            </select>
-          </div>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fill: '#94a3b8' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fill: '#94a3b8' }}
-                />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+  React.useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const data = await getDashboardSnapshot();
+        if (!active) {
+          return;
+        }
+        setSnapshot(data);
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Falha ao carregar dashboard.');
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const content = (() => {
+    if (loading) {
+      return <p className="text-sm text-slate-500">Carregando indicadores de rastreabilidade...</p>;
+    }
+
+    if (error || !snapshot) {
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Nao foi possivel carregar o dashboard. {error ?? 'Tente novamente em alguns segundos.'}
         </div>
+      );
+    }
 
-        {/* Pie Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-800 dark:text-white">Status dos Equipamentos</h3>
-            <div className="flex gap-3">
-              {statusData.map((s) => (
-                <span key={s.name} className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }}></div>
-                  {s.name}
-                </span>
+    const maxCompanyTotal = Math.max(1, ...snapshot.companiesByEquipment.map((item) => item.total));
+
+    return (
+      <div className="space-y-8">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Total de Equipamentos"
+            value={snapshot.totalEquipments}
+            helper="Base consolidada"
+            tone="blue"
+          />
+          <StatCard
+            title="Equipamentos Vencidos"
+            value={snapshot.expiredEquipments}
+            helper="Prioridade de troca"
+            tone={snapshot.expiredEquipments > 0 ? 'red' : 'emerald'}
+          />
+          <StatCard
+            title="Vencimento em 30 dias"
+            value={snapshot.expiringSoon}
+            helper="Acao preventiva"
+            tone={snapshot.expiringSoon > 0 ? 'amber' : 'emerald'}
+          />
+          <StatCard
+            title="Oportunidades Abertas"
+            value={snapshot.openOpportunities}
+            helper={`${snapshot.highUrgencyOpportunities} em alta urgencia`}
+            tone="slate"
+          />
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Carteira por empresa</h3>
+              <Building2 size={18} className="text-blue-600" />
+            </div>
+            <div className="space-y-3">
+              {snapshot.companiesByEquipment.length === 0 && (
+                <p className="text-sm text-slate-500">Sem dados de empresas para exibir.</p>
+              )}
+              {snapshot.companiesByEquipment.map((item) => (
+                <div key={item.companyName}>
+                  <div className="mb-1 flex items-center justify-between text-xs font-semibold text-slate-600">
+                    <span>{item.companyName}</span>
+                    <span>{item.total}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-100">
+                    <div
+                      className="h-2 rounded-full bg-blue-600"
+                      style={{ width: `${Math.max(8, (item.total / maxCompanyTotal) * 100)}%` }}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-          <div className="flex flex-col items-center justify-center h-64 gap-6 relative">
-            <div className="h-48 w-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <p className="text-3xl font-black text-slate-800 dark:text-white">94%</p>
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Disponível</p>
+          </article>
+
+          <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Status operacional</h3>
+              <Factory size={18} className="text-blue-600" />
+            </div>
+            <div className="space-y-3">
+              {snapshot.equipmentStatusBreakdown.map((item) => (
+                <div key={item.status} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                  <span className="text-sm font-medium text-slate-700">{item.status}</span>
+                  <span className="text-sm font-black text-slate-900">{item.total}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="rounded-lg bg-slate-50 p-2">
+                <p className="font-semibold">Inspecoes pendentes</p>
+                <p className="text-xl font-black text-slate-900">{snapshot.pendingInspections}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2">
+                <p className="font-semibold">Manutencoes ativas</p>
+                <p className="text-xl font-black text-slate-900">{snapshot.maintenanceInProgress}</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </article>
+        </section>
 
-      {/* Alerts Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <AlertTriangle className="text-red-500" size={20} />
-            Alertas Recentes
-          </h3>
-          <button className="text-blue-600 text-sm font-semibold hover:underline">Ver todos</button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Equipamento ID</th>
-                <th className="px-6 py-4">Empresa</th>
-                <th className="px-6 py-4">Tipo</th>
-                <th className="px-6 py-4">Vencimento</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4 text-right">Ação</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {alerts.map((alert) => (
-                <tr key={alert.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">{alert.id}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{alert.company}</td>
-                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{alert.type}</td>
-                  <td className={`px-6 py-4 text-sm font-semibold ${
-                    alert.status === 'VENCIDO' ? 'text-red-500' : 'text-amber-500'
-                  }`}>{alert.date}</td>
-                  <td className="px-6 py-4 text-center">
-                    <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${
-                      alert.status === 'VENCIDO' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      alert.status === 'PROX. VENCIMENTO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    }`}>
-                      {alert.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-slate-400 hover:text-blue-600 transition-colors">
-                      <MoreVertical size={18} />
-                    </button>
-                  </td>
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 p-5">
+            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
+              <AlertTriangle size={18} className="text-red-600" />
+              Alertas e oportunidades
+            </h3>
+            <Link href="/oportunidades" className="text-xs font-semibold text-blue-600 hover:underline">
+              Ver painel completo
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3">ID</th>
+                  <th className="px-4 py-3">Equipamento</th>
+                  <th className="px-4 py-3">Empresa</th>
+                  <th className="px-4 py-3">Servico</th>
+                  <th className="px-4 py-3">Data</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Acao</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {snapshot.alerts.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                      Nenhum alerta ativo no momento.
+                    </td>
+                  </tr>
+                )}
+                {snapshot.alerts.map((alert) => (
+                  <tr key={alert.id}>
+                    <td className="px-4 py-3 font-semibold text-slate-800">{alert.id}</td>
+                    <td className="px-4 py-3">{alert.equipmentId}</td>
+                    <td className="px-4 py-3">{alert.companyName}</td>
+                    <td className="px-4 py-3">{alert.type}</td>
+                    <td className="px-4 py-3">{alert.dateLabel}</td>
+                    <td className="px-4 py-3">
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                        {alert.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/equipamentos/${alert.equipmentId}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                      >
+                        Detalhes
+                        <ArrowRight size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Link href="/inspecoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+            <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+              <ClipboardCheck size={14} />
+              Inspecoes
+            </p>
+            <p className="text-sm text-slate-700">Gerencie checklists, aprovacoes e pendencias tecnicas.</p>
+          </Link>
+          <Link href="/manutencoes" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+            <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+              <Wrench size={14} />
+              Manutencoes
+            </p>
+            <p className="text-sm text-slate-700">Acompanhe ordens de servico e custos por equipamento.</p>
+          </Link>
+          <Link href="/relatorios" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:bg-slate-50">
+            <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+              <Clock3 size={14} />
+              Relatorios
+            </p>
+            <p className="text-sm text-slate-700">Gere material executivo para cliente e auditoria tecnica.</p>
+          </Link>
+        </section>
       </div>
-    </DashboardLayout>
-  );
+    );
+  })();
+
+  return <DashboardLayout title="Dashboard Principal">{content}</DashboardLayout>;
 }

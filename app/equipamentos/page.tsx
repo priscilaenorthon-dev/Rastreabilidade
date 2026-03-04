@@ -1,200 +1,250 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Download, 
-  QrCode, 
-  Info, 
-  Settings as SettingsIcon, 
-  Calendar, 
-  FileText, 
-  X, 
-  Upload,
-  Printer,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
+import { createEquipment, getCompanies, getEquipments } from '@/lib/data-service';
+import type { Company, Equipment } from '@/lib/types';
+import { PlusCircle, QrCode, Search } from 'lucide-react';
+
+function formatDate(value: string | null): string {
+  if (!value) {
+    return '-';
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString('pt-BR');
+}
+
+const EMPTY_FORM = {
+  id: '',
+  type: '',
+  category: 'Mangueira' as Equipment['category'],
+  company_id: '',
+  status: 'Ativo',
+  expires_at: '',
+};
 
 export default function EquipamentosPage() {
+  const [equipments, setEquipments] = React.useState<Equipment[]>([]);
+  const [companies, setCompanies] = React.useState<Company[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [query, setQuery] = React.useState('');
+  const [form, setForm] = React.useState(EMPTY_FORM);
+
+  React.useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const [equipmentRows, companyRows] = await Promise.all([getEquipments(), getCompanies()]);
+        if (!active) {
+          return;
+        }
+
+        setEquipments(equipmentRows);
+        setCompanies(companyRows);
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Falha ao carregar equipamentos.');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const companyMap = React.useMemo(() => new Map(companies.map((company) => [company.id, company.name])), [companies]);
+
+  const filtered = React.useMemo(() => {
+    if (!query.trim()) {
+      return equipments;
+    }
+
+    return equipments.filter((item) => {
+      const haystack = [item.id, item.type, item.status, item.category, companyMap.get(item.company_id ?? '') ?? '']
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query.trim().toLowerCase());
+    });
+  }, [equipments, query, companyMap]);
+
+  const handleFormChange = (field: keyof typeof EMPTY_FORM, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!form.id.trim() || !form.type.trim()) {
+      setError('Informe ID e tipo do equipamento.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      const created = await createEquipment({
+        id: form.id,
+        type: form.type,
+        category: form.category,
+        company_id: form.company_id || null,
+        status: form.status,
+        expires_at: form.expires_at || null,
+      });
+
+      setEquipments((current) => [created, ...current.filter((item) => item.id !== created.id)]);
+      setForm(EMPTY_FORM);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao salvar equipamento.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <DashboardLayout title="Cadastro de Equipamentos">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Registre e monitore mangueiras e conectores de alta pressão com rastreabilidade completa.</p>
+    <DashboardLayout title="Equipamentos">
+      <div className="space-y-7">
+        <section className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <p className="text-sm text-slate-500">Cadastro tecnico de mangueiras e conectores integrado ao Supabase.</p>
+          <div className="relative w-full max-w-sm">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar equipamento"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
           </div>
-          <div className="flex gap-3">
-            <button className="px-5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm hover:bg-slate-50 transition-colors">Cancelar</button>
-            <button className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">Salvar Equipamento</button>
-          </div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Form Fields */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* General Info Card */}
-            <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <Info className="text-blue-600" size={20} />
-                Informações Gerais
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">ID do Equipamento</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Ex: MH-2024-001" type="text"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo de Equipamento</label>
-                  <div className="flex h-11 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
-                    <button className="flex-1 h-full rounded-md bg-white dark:bg-slate-700 shadow-sm text-blue-600 text-xs font-bold transition-all">Mangueira</button>
-                    <button className="flex-1 h-full rounded-md text-slate-500 text-xs font-bold transition-all">Conector</button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fabricante</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Nome do Fabricante" type="text"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Modelo</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Série / Modelo" type="text"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Material</label>
-                  <select className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all">
-                    <option>Aço Inoxidável</option>
-                    <option>Termoplástico</option>
-                    <option>Borracha Sintética</option>
-                    <option>Compósito</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Comprimento (mm)</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Ex: 5000" type="number"/>
-                </div>
-              </div>
-            </section>
+        {error && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-            {/* Technical Specs Card */}
-            <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <SettingsIcon className="text-blue-600" size={20} />
-                Especificações Técnicas
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Pressão de Trabalho (Bar)</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Ex: 250" type="number"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Pressão Máxima (Bar)</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Ex: 600" type="number"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Empresa Proprietária</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Nome da Unidade / Empresa" type="text"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Setor / Localização</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" placeholder="Setor Operacional" type="text"/>
-                </div>
-              </div>
-            </section>
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3">ID</th>
+                <th className="px-4 py-3">Tipo</th>
+                <th className="px-4 py-3">Categoria</th>
+                <th className="px-4 py-3">Empresa</th>
+                <th className="px-4 py-3">Validade</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Acao</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                    Carregando equipamentos...
+                  </td>
+                </tr>
+              )}
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
+                    Nenhum equipamento encontrado.
+                  </td>
+                </tr>
+              )}
+              {filtered.map((item) => (
+                <tr key={item.id}>
+                  <td className="px-4 py-3 font-semibold text-slate-800">{item.id}</td>
+                  <td className="px-4 py-3">{item.type}</td>
+                  <td className="px-4 py-3">{item.category}</td>
+                  <td className="px-4 py-3">{companyMap.get(item.company_id ?? '') ?? '-'}</td>
+                  <td className="px-4 py-3">{formatDate(item.expires_at)}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{item.status}</span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`/equipamentos/${item.id}`}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                    >
+                      <QrCode size={14} />
+                      Detalhes
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
 
-            {/* Dates and Status Card */}
-            <section className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <Calendar className="text-blue-600" size={20} />
-                Cronograma e Status
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fabricação</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" type="date"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Instalação</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" type="date"/>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Validade</label>
-                  <input className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm p-3 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all" type="date"/>
-                </div>
-              </div>
-              <div className="mt-6">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-3 block">Status Inicial</label>
-                <div className="flex flex-wrap gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 px-4 py-2.5 rounded-lg text-emerald-700 dark:text-emerald-400 transition-all hover:bg-emerald-100">
-                    <input type="radio" name="status" className="text-emerald-600 focus:ring-emerald-500" defaultChecked />
-                    <span className="text-xs font-bold">Ativo / Operacional</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-lg text-amber-700 dark:text-amber-400 transition-all hover:bg-amber-100">
-                    <input type="radio" name="status" className="text-amber-600 focus:ring-amber-500" />
-                    <span className="text-xs font-bold">Aguardando Inspeção</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 transition-all hover:bg-slate-100">
-                    <input type="radio" name="status" className="text-slate-600 focus:ring-slate-500" />
-                    <span className="text-xs font-bold">Em Estoque</span>
-                  </label>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Right Column: QR Code and Summary */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center">
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Identificação QR Code</h3>
-              <div className="w-48 h-48 bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center mb-6 relative group cursor-pointer overflow-hidden transition-all hover:border-blue-500/50">
-                <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <QrCode className="text-blue-600" size={48} />
-                </div>
-                <div className="flex flex-col items-center gap-3 text-slate-400">
-                  <QrCode size={64} strokeWidth={1} />
-                  <p className="text-[10px] px-6 font-medium leading-relaxed">O QR Code será gerado automaticamente após salvar.</p>
-                </div>
-              </div>
-              <button className="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2">
-                <Printer size={16} />
-                Imprimir Etiqueta
-              </button>
-            </div>
-
-            <div className="bg-blue-600/5 dark:bg-blue-600/10 p-6 rounded-xl border border-blue-600/20">
-              <h3 className="text-sm font-bold text-blue-600 mb-3 flex items-center gap-2">
-                <AlertCircle size={18} />
-                Dica de Rastreabilidade
-              </h3>
-              <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                Certifique-se de que a <strong>Data de Validade</strong> esteja em conformidade com as normas da NR-13 para sistemas de alta pressão. O sistema enviará um alerta 30 dias antes do vencimento.
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Documentos</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 group">
-                  <FileText className="text-red-500" size={20} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold truncate">Manual_Tecnico.pdf</p>
-                    <p className="text-[10px] text-slate-500">2.4 MB</p>
-                  </div>
-                  <button className="text-slate-400 hover:text-red-500 transition-colors">
-                    <X size={16} />
-                  </button>
-                </div>
-                <button className="w-full py-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex flex-col items-center gap-2">
-                  <Upload size={20} />
-                  Upload de Certificados
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700">
+            <PlusCircle size={16} className="text-blue-600" />
+            Novo equipamento
+          </h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <input
+              value={form.id}
+              onChange={(event) => handleFormChange('id', event.target.value)}
+              placeholder="ID (ex.: MANG-9001)"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <input
+              value={form.type}
+              onChange={(event) => handleFormChange('type', event.target.value)}
+              placeholder="Tipo do equipamento"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <select
+              value={form.category}
+              onChange={(event) => handleFormChange('category', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              <option value="Mangueira">Mangueira</option>
+              <option value="Conector">Conector</option>
+            </select>
+            <select
+              value={form.company_id}
+              onChange={(event) => handleFormChange('company_id', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              <option value="">Empresa nao vinculada</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={form.expires_at}
+              onChange={(event) => handleFormChange('expires_at', event.target.value)}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <input
+              value={form.status}
+              onChange={(event) => handleFormChange('status', event.target.value)}
+              placeholder="Status"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {saving ? 'Salvando...' : 'Salvar equipamento'}
+            </button>
+          </form>
+        </section>
       </div>
     </DashboardLayout>
   );

@@ -1,20 +1,55 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# HoseTrack Pro - Demo com Supabase
 
-# Run and deploy your AI Studio app
+Aplicacao Next.js para rastreabilidade de mangueiras/conectores, inspeções, manutencoes e oportunidades comerciais.
 
-This contains everything you need to run your app locally.
+## 1) Configuracao local
 
-View your app in AI Studio: https://ai.studio/apps/bab2abca-a991-4010-a078-3eb0d3734e0d
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
+1. Instale dependencias:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Crie/ajuste `.env.local` com:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://svhowqqwngxdrylonxul.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ztYDrpek8Sd0EdGLsRNveQ_q_yxcEJu
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUA_ANON_KEY>
+```
+
+3. Rode o projeto:
    `npm run dev`
+
+## 2) Bootstrap do banco no Supabase
+
+Abra o SQL Editor do projeto e execute na ordem:
+
+1. `supabase/schema.sql`
+2. `supabase/seed.sql`
+
+Esses scripts criam as tabelas:
+- `companies`
+- `equipments`
+- `opportunities`
+- `inspections`
+- `maintenances`
+
+E inserem dados iniciais para demonstracao.
+
+## 3) O que ja esta integrado
+
+- Dashboard com KPIs reais (ou fallback de demo)
+- Empresas com cadastro (insert no Supabase)
+- Equipamentos com cadastro e detalhe
+- Oportunidades com filtros e exportacao CSV
+- Inspecoes e manutencoes conectadas ao banco
+- Relatorio executivo com exportacao CSV
+
+## 4) Verificacao rapida
+
+Comandos de smoke test:
+
+- `node --test tests/smoke/navigation-smoke.test.mjs`
+- `node --test tests/smoke/supabase-readiness.test.mjs`
+
+## 5) Nota de seguranca
+
+As policies de RLS do `schema.sql` estao abertas para facilitar a demonstracao com anon key.
+Antes de producao, restrinja policies por usuario/perfil e mova operacoes criticas para backend seguro.
