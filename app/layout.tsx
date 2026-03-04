@@ -13,8 +13,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'HoseTrack Pro | Gestão Industrial',
-  description: 'Sistema de Rastreabilidade e Manutenção de Mangueiras e Conexões',
+  title: 'HoseTrack Pro | Gestao Industrial',
+  description: 'Sistema de rastreabilidade e manutencao de mangueiras e conexoes.',
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    shortcut: ['/icon.svg'],
+    apple: [{ url: '/icon.svg' }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

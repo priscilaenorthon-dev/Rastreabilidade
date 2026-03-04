@@ -6,7 +6,10 @@ import {
   DEMO_MAINTENANCES,
 } from '@/lib/demo-data';
 import { deleteRow, insertRow, isSupabaseConfigured, selectRows, updateRow } from '@/lib/supabase-rest';
+import { hashPassword } from '@/lib/password-utils';
 import type {
+  ClientReadonlySnapshot,
+  ClientAccount,
   Company,
   CompanyStatus,
   DashboardSnapshot,
@@ -58,6 +61,10 @@ function daysUntil(value: string | null): number | null {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+function normalizeCnpj(value: string): string {
+  return value.replace(/[^\d]/g, '');
+}
+
 async function loadWithFallback<T>(loader: () => Promise<T[]>, fallback: T[]): Promise<T[]> {
   if (!isSupabaseConfigured()) {
     return fallback;
@@ -96,12 +103,25 @@ export async function createCompany(input: {
   name: string;
   segment: string;
   cnpj: string;
+  portal_username?: string;
+  portal_password?: string;
   location?: string;
   responsible?: string;
   email?: string;
   phone?: string;
   status?: CompanyStatus;
 }): Promise<Company> {
+  const portalUsername = input.portal_username?.trim() ?? '';
+  const portalPassword = input.portal_password?.trim() ?? '';
+
+  if ((portalUsername && !portalPassword) || (!portalUsername && portalPassword)) {
+    throw new Error('Informe usuario e senha do portal do cliente.');
+  }
+
+  if (portalUsername && portalPassword.length < 6) {
+    throw new Error('A senha do portal deve ter ao menos 6 caracteres.');
+  }
+
   const payload: Company = {
     id: crypto.randomUUID(),
     name: input.name.trim(),
@@ -117,10 +137,36 @@ export async function createCompany(input: {
   assertWriteReady();
 
   try {
+    if (portalUsername) {
+      const existing = await selectRows<ClientAccount>('client_accounts', {
+        filters: { username: portalUsername },
+        limit: 1,
+      });
+      if (existing.length > 0) {
+        throw new Error('Usuario do portal ja existe. Escolha outro usuario.');
+      }
+    }
+
     const inserted = await insertRow<Company>('companies', payload);
     if (!inserted) {
       throw new Error('Supabase retornou resposta vazia ao criar empresa.');
     }
+
+    if (portalUsername && portalPassword) {
+      const accountPayload: ClientAccount = {
+        id: crypto.randomUUID(),
+        company_id: inserted.id,
+        username: portalUsername,
+        password_hash: await hashPassword(portalPassword),
+        is_active: true,
+      };
+
+      const accountInserted = await insertRow<ClientAccount>('client_accounts', accountPayload);
+      if (!accountInserted) {
+        throw new Error('Empresa criada, mas nao foi possivel criar o login do cliente.');
+      }
+    }
+
     return inserted;
   } catch (error) {
     throw toReadableError(error, 'Falha ao salvar empresa no Supabase.');
@@ -371,6 +417,80 @@ export async function getMaintenanceViews(): Promise<MaintenanceView[]> {
     ...item,
     equipment_type: equipmentMap.get(item.equipment_id)?.type ?? 'Equipamento nao encontrado',
   }));
+}
+
+export async function getClientReadonlySnapshot(companyCnpj: string): Promise<ClientReadonlySnapshot> {
+  const [companies, equipments, opportunities, inspectionViews, maintenanceViews] = await Promise.all([
+    getCompanies(),
+    getEquipments(),
+    getOpportunityViews(),
+    getInspectionViews(),
+    getMaintenanceViews(),
+  ]);
+
+  const normalizedTarget = normalizeCnpj(companyCnpj);
+  const company = companies.find((item) => normalizeCnpj(item.cnpj) === normalizedTarget) ?? null;
+
+  if (!company) {
+    return {
+      company: null,
+      equipments: [],
+      opportunities: [],
+      inspections: [],
+      maintenances: [],
+      indicators: {
+        totalEquipments: 0,
+        expiringSoon: 0,
+        overdue: 0,
+        pendingInspections: 0,
+        pendingMaintenances: 0,
+        openOpportunities: 0,
+      },
+    };
+  }
+
+  const scopedEquipments = equipments.filter((item) => item.company_id === company.id);
+  const equipmentIds = new Set(scopedEquipments.map((item) => item.id));
+
+  const scopedOpportunities = opportunities.filter(
+    (item) => item.company_id === company.id || (item.equipment_id ? equipmentIds.has(item.equipment_id) : false)
+  );
+  const scopedInspections = inspectionViews.filter((item) => equipmentIds.has(item.equipment_id));
+  const scopedMaintenances = maintenanceViews.filter((item) => equipmentIds.has(item.equipment_id));
+
+  const expiringSoon = scopedEquipments.filter((item) => {
+    const days = daysUntil(item.expires_at);
+    return days !== null && days >= 0 && days <= 30;
+  }).length;
+
+  const overdue = scopedEquipments.filter((item) => {
+    const days = daysUntil(item.expires_at);
+    return days !== null && days < 0;
+  }).length;
+
+  const pendingInspections = scopedInspections.filter((item) => item.status.toLowerCase().includes('pendente')).length;
+  const pendingMaintenances = scopedMaintenances.filter((item) =>
+    ['agendada', 'em andamento', 'pendente'].some((status) => item.status.toLowerCase().includes(status))
+  ).length;
+  const openOpportunities = scopedOpportunities.filter((item) =>
+    ['aberta', 'pendente', 'agendada'].some((status) => item.status.toLowerCase().includes(status))
+  ).length;
+
+  return {
+    company,
+    equipments: scopedEquipments,
+    opportunities: scopedOpportunities,
+    inspections: scopedInspections,
+    maintenances: scopedMaintenances,
+    indicators: {
+      totalEquipments: scopedEquipments.length,
+      expiringSoon,
+      overdue,
+      pendingInspections,
+      pendingMaintenances,
+      openOpportunities,
+    },
+  };
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {

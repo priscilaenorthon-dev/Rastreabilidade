@@ -14,6 +14,8 @@ const EMPTY_FORM = {
   responsible: '',
   email: '',
   phone: '',
+  portal_username: '',
+  portal_password: '',
 };
 
 export default function EmpresasPage() {
@@ -88,6 +90,11 @@ export default function EmpresasPage() {
       return;
     }
 
+    if (!form.portal_username.trim() || !form.portal_password.trim()) {
+      setError('Preencha usuario e senha do portal do cliente.');
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccessMessage(null);
@@ -101,6 +108,8 @@ export default function EmpresasPage() {
         responsible: form.responsible,
         email: form.email,
         phone: form.phone,
+        portal_username: form.portal_username,
+        portal_password: form.portal_password,
         status: 'Ativo',
       });
 
@@ -271,6 +280,19 @@ export default function EmpresasPage() {
               value={form.phone}
               onChange={(event) => handleFormChange('phone', event.target.value)}
               placeholder="Telefone"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <input
+              value={form.portal_username}
+              onChange={(event) => handleFormChange('portal_username', event.target.value)}
+              placeholder="Usuario do portal"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+            <input
+              type="password"
+              value={form.portal_password}
+              onChange={(event) => handleFormChange('portal_password', event.target.value)}
+              placeholder="Senha do portal"
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30"
             />
             <button

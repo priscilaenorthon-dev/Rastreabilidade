@@ -13,6 +13,15 @@ export interface Company {
   created_at?: string;
 }
 
+export interface ClientAccount {
+  id: string;
+  company_id: string;
+  username: string;
+  password_hash: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface Equipment {
   id: string;
   company_id: string | null;
@@ -117,4 +126,20 @@ export interface ReportSnapshot {
   overdueCount: number;
   expiringIn30Days: number;
   generatedAt: string;
+}
+
+export interface ClientReadonlySnapshot {
+  company: Company | null;
+  equipments: Equipment[];
+  opportunities: OpportunityView[];
+  inspections: InspectionView[];
+  maintenances: MaintenanceView[];
+  indicators: {
+    totalEquipments: number;
+    expiringSoon: number;
+    overdue: number;
+    pendingInspections: number;
+    pendingMaintenances: number;
+    openOpportunities: number;
+  };
 }

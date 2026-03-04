@@ -16,6 +16,15 @@ create table if not exists public.companies (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.client_accounts (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.companies(id) on delete cascade,
+  username text not null unique,
+  password_hash text not null,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.equipments (
   id text primary key,
   company_id uuid references public.companies(id) on delete set null,
@@ -74,12 +83,15 @@ create table if not exists public.maintenances (
 );
 
 create index if not exists idx_equipments_company_id on public.equipments(company_id);
+create index if not exists idx_client_accounts_company_id on public.client_accounts(company_id);
+create index if not exists idx_client_accounts_username on public.client_accounts(username);
 create index if not exists idx_opportunities_company_id on public.opportunities(company_id);
 create index if not exists idx_opportunities_equipment_id on public.opportunities(equipment_id);
 create index if not exists idx_inspections_equipment_id on public.inspections(equipment_id);
 create index if not exists idx_maintenances_equipment_id on public.maintenances(equipment_id);
 
 alter table public.companies enable row level security;
+alter table public.client_accounts enable row level security;
 alter table public.equipments enable row level security;
 alter table public.opportunities enable row level security;
 alter table public.inspections enable row level security;
@@ -94,6 +106,15 @@ create policy companies_insert_public on public.companies for insert with check 
 
 drop policy if exists companies_update_public on public.companies;
 create policy companies_update_public on public.companies for update using (true) with check (true);
+
+drop policy if exists client_accounts_select_public on public.client_accounts;
+create policy client_accounts_select_public on public.client_accounts for select using (true);
+
+drop policy if exists client_accounts_insert_public on public.client_accounts;
+create policy client_accounts_insert_public on public.client_accounts for insert with check (true);
+
+drop policy if exists client_accounts_update_public on public.client_accounts;
+create policy client_accounts_update_public on public.client_accounts for update using (true) with check (true);
 
 drop policy if exists equipments_select_public on public.equipments;
 create policy equipments_select_public on public.equipments for select using (true);

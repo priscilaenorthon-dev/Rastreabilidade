@@ -18,6 +18,21 @@ set
   phone = excluded.phone,
   status = excluded.status;
 
+insert into public.client_accounts (id, company_id, username, password_hash, is_active)
+values
+  (
+    'aaaaaaaa-1111-4444-8888-aaaaaaaaaaaa',
+    '44444444-4444-4444-8444-444444444444',
+    'jomaga',
+    'f70abc6b2afbbda09484b9e8e543ad093743110cd6163f873a5c35a4dace1247',
+    true
+  )
+on conflict (username) do update
+set
+  company_id = excluded.company_id,
+  password_hash = excluded.password_hash,
+  is_active = excluded.is_active;
+
 insert into public.equipments (
   id,
   company_id,
