@@ -1,6 +1,7 @@
 {
   "name": "HoseTrack Pro",
   "description": "Sistema avançado de gestão, rastreabilidade e manutenção preditiva de mangueiras e conexões industriais.",
+  "website": "https://rastreabilidade-bpwc.vercel.app/",
   "requestFramePermissions": [
     "camera"
   ]

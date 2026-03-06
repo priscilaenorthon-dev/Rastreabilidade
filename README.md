@@ -1,200 +1,112 @@
-<div align="center">
+# HoseTrack Pro
 
-# 🛡️ Jomaga SafeWork
+Plataforma web de rastreabilidade industrial para gestão de mangueiras e conexões, com foco em operação, manutenção, inspeção e visão comercial.
 
-**Plataforma de Gestão de Segurança do Trabalho**
+## 📌 About
 
-Sistema web para gestão de SST com módulos de colaboradores, EPIs, incidentes, DDS, treinamentos, ASO, relatórios e documentos.
+- Website: https://rastreabilidade-bpwc.vercel.app/
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20Auth-3FCF8E?logo=supabase)](https://supabase.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+## 🌐 Ambiente em produção
 
-</div>
+https://rastreabilidade-bpwc.vercel.app/
 
----
+## ✨ O que este sistema faz
 
-## ✅ Ajustes recentes (Mar/2026)
+- Dashboard com indicadores operacionais e alertas por prioridade.
+- Cadastro e gestão de empresas (incluindo credenciais do portal do cliente).
+- Gestão de equipamentos com vínculo por empresa e detalhamento por ativo.
+- Gestão de inspeções com registro, atualização de status e exclusão.
+- Gestão de manutenções com controle de agenda, custo e técnico responsável.
+- Pipeline de oportunidades com busca, filtro por urgência e exportação CSV.
+- Relatórios executivos com exportação de resumo.
+- Portal do cliente em modo somente leitura, escopado por empresa.
+- Autenticação separada para admin e cliente com rotas dedicadas.
 
-- **Build Next.js 15 corrigido** na rota dinâmica de assinatura (`params` como `Promise` + `use(params)`).
-- **Impressão DDS reformulada** para formato de ficha/tabular (estilo papel de presença com assinatura).
-- **IA DDS estabilizada** com mensagens claras para chave ausente/inválida e sessão expirada.
-- **Configurações simplificadas**: removido campo duplicado de título técnico em Empresa; mantém apenas **Cargo/Função** no Perfil.
-- **Exibição de usuário ajustada**: fallback “Usuário” removido; sistema prioriza nome do perfil salvo.
-- **Suporte > Atualizações Futuras** agora mostra status real por item: **Implementado / Parcial / Planejado**.
-- **Migrations baseline adicionadas** (schema completo + seed massivo de dados).
-- **Configurações > Empresa com logo**: upload da logo em **Supabase Storage** + persistência em tabela de configuração.
-- **Documentos com identidade visual**: impressão de DDS e Ficha de EPI agora inclui logo e nome da empresa.
-- **Relatório Mensal profissional**: geração com layout executivo (cabeçalho, KPIs, tabelas e branding) pronto para **Salvar como PDF**.
-- **Alertas in-app completos** no Header: incidentes, treinamentos, EPIs, ASOs, DDS, inventário e lembrete de relatório.
-- **PWA offline (leitura)** com Service Worker, cache de navegação e fallback de conexão.
-
----
-
-## ✨ Funcionalidades
-
-| Módulo | Descrição |
-|---|---|
-| 📊 Dashboard | KPIs e visão resumida de segurança |
-| 👷 Colaboradores | Cadastro, status, assinatura digital e LGPD |
-| 🦺 EPIs | Controle de validade e inventário |
-| ⚠️ Incidentes | Registro, severidade, tipo e evidências |
-| 📝 DDS | Registro, lista de presença, impressão e IA |
-| 🎓 Treinamentos | Gestão de agenda, categoria e status |
-| 🩺 ASO | Controle de exames ocupacionais |
-| 📁 Documentos | Metadados + Storage Supabase |
-| ⚙️ Configurações | Empresa, perfil, idioma e notificações |
-| 💬 Suporte | Canal de ajuda + roadmap com status |
-
----
-
-## 🧾 Relatório Mensal em PDF
-
-- Na tela de **Relatórios**, o card **Relatório Mensal de Segurança** abre uma versão profissional pronta para impressão.
-- Para arquivo digital, use **Imprimir → Salvar como PDF**.
-- O documento aplica automaticamente **nome e logo da empresa** definidos em Configurações.
-
----
-
-## 🔔 Central de notificações (in-app)
-
-O sino do Header consolida alertas de:
-
-- Incidentes em aberto
-- Treinamentos próximos
-- EPIs vencendo
-- ASOs em alerta
-- Agenda de DDS
-- Estoque crítico de inventário
-- Lembrete de relatório mensal
-
-As preferências por tipo são configuradas em **Configurações > Notificações**.
-
----
-
-## 📱 PWA e Offline
-
-- Manifesto e ícones para instalação em celular.
-- Service Worker registrado automaticamente no App Shell.
-- Cache de navegação e recursos para **consulta offline de leitura**.
-- Fallback dedicado (`offline.html`) quando não houver conexão.
-
-> Escopo atual: leitura offline. Sincronização offline de criação/edição entra em fase futura.
-
----
-
-## 🛠️ Stack
+## 🧱 Stack
 
 - Next.js 15 (App Router)
 - React 19 + TypeScript
 - Tailwind CSS 4
-- Supabase (PostgreSQL + Auth + Storage)
-- Motion + Lucide + Sonner
-- Gemini via `@google/genai` na rota `/api/generate-dds`
+- Supabase (PostgreSQL + REST)
 
----
+## 🚀 Setup rápido
 
-## 🚀 Setup local
-
-### Pré-requisitos
-
-- Node.js 18+
-- Projeto Supabase configurado
-
-### 1) Clone e instalação
+1. Instalar dependências:
 
 ```bash
-git clone https://github.com/priscilaenorthon-dev/Jomaga-SafeWork.git
-cd Jomaga-SafeWork
 npm install
 ```
 
-### 2) Variáveis de ambiente
-
-Crie `.env.local`:
+2. Criar/atualizar `.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://svhowqqwngxdrylonxul.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUA_ANON_KEY>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ztYDrpek8Sd0EdGLsRNveQ_q_yxcEJu
 
-# Use UMA das chaves abaixo (server-side):
-# OPENROUTER_API_KEY=sua-chave-openrouter
-GEMINI_API_KEY=sua-chave-google-ai-studio
-# GOOGLE_AI_STUDIO_API_KEY=sua-chave-google-ai-studio
-# GOOGLE_API_KEY=sua-chave-google-ai-studio
-# GOOGLE_GENERATIVE_AI_API_KEY=sua-chave-google-ai-studio
-# Compatibilidade (já aceito pela API):
-# NEXT_PUBLIC_GEMINI_API_KEY=sua-chave-google-ai-studio
-# NEXT_PUBLIC_GOOGLE_AI_STUDIO_API_KEY=sua-chave-google-ai-studio
-
-# Opcional (OpenRouter):
-# OPENROUTER_MODEL=google/gemini-2.0-flash-001
-
-APP_URL=http://localhost:3000
+# Fallback demo (opcional)
+CLIENT_PORTAL_USERNAME=jomaga
+CLIENT_PORTAL_PASSWORD=jomaga1234
+CLIENT_PORTAL_CNPJ=33.000.167/0001-01
+ADMIN_PORTAL_USERNAME=admin
+ADMIN_PORTAL_PASSWORD=admin1234
 ```
 
-> Recomendação: prefira variáveis server-side (`OPENROUTER_API_KEY` ou `GEMINI_API_KEY`).
-
-### 3) Banco de dados
-
-Você pode seguir dois caminhos:
-
-#### Opção A — Histórico de migrations (recomendado para evolução)
-
-Aplicar os arquivos existentes em sequência na pasta `supabase/migrations`.
-
-#### Opção B — Baseline completo + seed massivo (ambiente novo)
-
-1. `supabase/migrations/20260306010000_baseline_schema.sql`
-2. `supabase/migrations/20260306010001_baseline_seed_300_plus.sql`
-3. `supabase/migrations/20260306010002_company_settings_branding.sql`
-
-Esse seed gera **320 registros por tabela operacional** (`collaborators`, `incidents`, `epis`, `trainings`, `dds_records`, `documents`, `epi_inventory`, `asos`).
-
-### 4) Rodar o projeto
+3. Rodar em desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-Acesse `http://localhost:3000`.
+## 🔐 Variáveis de ambiente
 
----
-
-## ☁️ Vercel (produção)
-
-No projeto da Vercel, configure em `Settings > Environment Variables`:
+Obrigatórias:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `OPENROUTER_API_KEY` (preferido no seu caso) ou `GEMINI_API_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ou `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
 
-Opcional no OpenRouter:
-- `OPENROUTER_MODEL` (padrão: `google/gemini-2.0-flash-001`)
+Opcionais:
 
-Depois faça `Redeploy`.
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `CLIENT_PORTAL_USERNAME`
+- `CLIENT_PORTAL_PASSWORD`
+- `CLIENT_PORTAL_CNPJ`
+- `ADMIN_PORTAL_USERNAME`
+- `ADMIN_PORTAL_PASSWORD`
 
----
+## 🗄️ Banco de dados (Supabase)
 
-## 🧱 Estrutura principal
+Executar no SQL Editor do Supabase, nesta ordem:
 
-```txt
-app/
-	api/generate-dds/route.ts
-	dds/page.tsx
-	configuracoes/page.tsx
-	suporte/page.tsx
-	assinatura/[token]/page.tsx
-components/
-	Header.tsx
-supabase/
-	migrations/
-		20260306010000_baseline_schema.sql
-		20260306010001_baseline_seed_300_plus.sql
+1. `supabase/schema.sql`
+2. `supabase/seed.sql`
+3. (opcional para ambientes antigos) `supabase/patch-delete-policies.sql`
+
+Tabelas principais:
+
+- `companies`
+- `client_accounts`
+- `equipments`
+- `opportunities`
+- `inspections`
+- `maintenances`
+
+## 👤 Acessos do sistema
+
+- Login admin: `/login`
+- Login cliente: `/cliente/login`
+- O portal do cliente é somente leitura e mostra apenas dados da empresa vinculada.
+
+## 🧪 Testes smoke
+
+```bash
+node --test tests/smoke/navigation-smoke.test.mjs
+node --test tests/smoke/supabase-readiness.test.mjs
+node --test tests/smoke/crud-actions-smoke.test.mjs
+node --test tests/smoke/client-portal-smoke.test.mjs
+node --test tests/smoke/client-account-provisioning-smoke.test.mjs
+node --test tests/smoke/admin-authentication-smoke.test.mjs
 ```
-
----
 
 ## 📜 Scripts
 
@@ -206,8 +118,7 @@ supabase/
 | `npm run lint` | ESLint |
 | `npm run clean` | Limpa cache do Next |
 
----
+## 🛡️ Segurança (observação importante)
 
-## 🤝 Projeto
-
-Jomaga SafeWork — gestão de segurança do trabalho com foco em rastreabilidade, conformidade e operação de campo.
+As políticas de RLS no `supabase/schema.sql` estão permissivas para facilitar demonstração com chave anônima.
+Para produção, implemente políticas restritivas por usuário/perfil e mova operações sensíveis para backend seguro.

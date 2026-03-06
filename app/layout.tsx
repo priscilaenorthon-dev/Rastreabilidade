@@ -15,6 +15,17 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'HoseTrack Pro | Gestao Industrial',
   description: 'Sistema de rastreabilidade e manutencao de mangueiras e conexoes.',
+  metadataBase: new URL('https://rastreabilidade-bpwc.vercel.app/'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'HoseTrack Pro | Gestao Industrial',
+    description: 'Sistema de rastreabilidade e manutencao de mangueiras e conexoes.',
+    url: 'https://rastreabilidade-bpwc.vercel.app/',
+    siteName: 'HoseTrack Pro',
+    type: 'website',
+  },
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
     shortcut: ['/icon.svg'],
